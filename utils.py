@@ -61,7 +61,7 @@ def list_gitignore_files(repo_path):
             ['git', 'ls-files', '*.gitignore'],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            text=True,
+            universal_newlines=True,
             check=True
         )
 
@@ -82,7 +82,7 @@ def list_gitignore_files(repo_path):
 def get_git_remotes():
     # 获取当前Git仓库中的所有远程仓库
     result = subprocess.run(
-        ['git', 'remote'], stdout=subprocess.PIPE, text=True)
+        ['git', 'remote'], stdout=subprocess.PIPE, universal_newlines=True)
     remotes = result.stdout.split()
     return remotes
 
@@ -167,7 +167,7 @@ def get_earliest_commit_date(repo_path):
 
     # Execute the command and capture the output
     result = subprocess.run(command, stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE, text=True)
+                            stderr=subprocess.PIPE, universal_newlines=True)
 
     # Check if there was an error
     if result.returncode != 0:
