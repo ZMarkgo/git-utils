@@ -32,6 +32,9 @@ python3 split-module.py -o D:/coding/zhurong-CodeWisdom/test_codes/OS-23Fall-FDU
 
 安装依赖
 - 相关链接：https://github.com/newren/git-filter-repo?tab=readme-ov-file
+- git >= 2.22.0 at a minimum; 
+- some features require git >= 2.24.0 or later
+- python3 >= 3.5
 
 ```shell
 pip install git-filter-repo
@@ -55,6 +58,12 @@ python3 split-files.py \
 -nn linux-stable-split-demo1 \
 -nl /home/fdse/code-wisdom-installer/repository \
 -nb demo1
+python3 split-files.py \
+-o /home/fdse/code-wisdom-installer/repository/OS-23Fall-FDU-temp \
+-tfs console.c \
+-nn OS-23Fall-FDU-temp-split \
+-nl /home/fdse/code-wisdom-installer/repository \
+-nb split
 # 示例2 windows 单行命令
 python3 split-files.py -o D:/coding/zhurong-CodeWisdom/test_codes/linux-stable -tfs include/linux/ksm.h mm/ksm.c mm/memory.c -nn linux-stable-demo1 -nl D:/coding/zhurong-CodeWisdom/test_codes -nb demo1
 # 示例3 demo1
