@@ -58,7 +58,12 @@ def list_gitignore_files(repo_path):
 
         # 使用 git ls-files 列出所有文件，并使用 grep 筛选出 .gitignore 文件
         result = subprocess.run(
-            ['git', 'ls-files', '*.gitignore'], capture_output=True, text=True, check=True)
+            ['git', 'ls-files', '*.gitignore'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=True
+        )
 
         # 分割结果为行，并返回列表
         gitignore_files = result.stdout.splitlines()
