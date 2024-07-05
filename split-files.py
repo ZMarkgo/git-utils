@@ -2,7 +2,7 @@ import os
 import sys
 import subprocess
 import argparse
-import time
+from TimeUtils import Timer
 from utils import copy_dir, remove_dir, list_gitignore_files, show_repo_size_info, remove_all_git_remotes, add_virtual_remote, create_branch, show_commit_count, show_earliest_commit_time
 
 def split_files(original_repo_path="", target_files: list = [], new_repo_name="", new_repo_location="", new_branch_name=""):
@@ -83,9 +83,9 @@ def split_files(original_repo_path="", target_files: list = [], new_repo_name=""
 
 
 if __name__ == "__main__":
-    start_time = time.time()
+    timer = Timer()
     parser = argparse.ArgumentParser(
-        description="Split a module from a Git repository into a new repository.")
+        description="Split several files from a Git repository into a new repository.")
     parser.add_argument("-o", "--original_repo_path", required=True,
                         help="Path to the original Git repository.")
     parser.add_argument("-tfs", "--target_files", nargs='+',
@@ -113,5 +113,5 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Error: {e}")
 
-    end_time = time.time()
-    print(f"Time taken: {end_time - start_time} seconds")
+    timer.end()
+    timer.show_time_cost()
