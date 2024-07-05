@@ -2087,9 +2087,6 @@ EXAMPLES
       p = subproc.Popen('git diff-tree -h'.split(),
                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
       output = p.stdout.read()
-      if b'--combined-all-paths' not in output:
-        # We need a version of git-diff-tree with --combined-all-paths
-        raise SystemExit(_("Error: need git >= 2.22.0"))
     # End of sanity checks on git version
     if args.max_blob_size:
       suffix = args.max_blob_size[-1]
@@ -2341,7 +2338,7 @@ class RepoAnalyze(object):
     num_commits = 0
     cmd = ('git rev-list --topo-order --reverse {}'.format(' '.join(args.refs)) +
            ' | git diff-tree --stdin --always --root --format=%H%n%P%n%cd' +
-           ' --date=short -M -t -c --raw --combined-all-paths')
+           ' --date=short -M -t -c --raw')
     dtp = subproc.Popen(cmd, shell=True, bufsize=-1, stdout=subprocess.PIPE)
     f = dtp.stdout
     line = f.readline()
@@ -3662,9 +3659,9 @@ class RepoFilter(object):
         reencode = 'no' if self._args.preserve_commit_encoding else 'yes'
         extra_flags.append('--reencode='+reencode)
       location = ['-C', self._args.source] if self._args.source else []
-      fep_cmd = ['git'] + location + ['fast-export', '--show-original-ids',
+      fep_cmd = ['git'] + location + ['fast-export',
                  '--signed-tags=strip', '--tag-of-filtered-object=rewrite',
-                 '--fake-missing-tagger', '--reference-excluded-parents'
+                 '--fake-missing-tagger',
                  ] + extra_flags + self._args.refs
       self._fep = subproc.Popen(fep_cmd, bufsize=-1, stdout=subprocess.PIPE)
       self._input = self._fep.stdout
@@ -3714,22 +3711,32 @@ class RepoFilter(object):
     if self._args.debug:
       print("[DEBUG] Migrating refs/remotes/origin/* -> refs/heads/*")
     target_working_dir = self._args.target or b'.'
-    p = subproc.Popen('git update-ref --no-deref --stdin'.split(),
-                      stdin=subprocess.PIPE, cwd=target_working_dir)
+    # p = subproc.Popen('git update-ref --no-deref --stdin'.split(),
+    #                   stdin=subprocess.PIPE, cwd=target_working_dir)
     for ref in refs_to_migrate:
+      # 当引用为 refs/remotes/origin/HEAD 时，删除该引用：
       if ref == b'refs/remotes/origin/HEAD':
-        p.stdin.write(b'delete %s %s\n' % (ref, self._orig_refs[ref]))
+        cmd = ['git', 'update-ref', '--no-deref', '-d', ref.decode(), self._orig_refs[ref].decode()]
+        result = subprocess.run(cmd, cwd=target_working_dir)
+        if result.returncode != 0:
+            raise SystemExit("git update-ref failed; see above")
         del self._orig_refs[ref]
         continue
+      # 如果 newref 不在 self._orig_refs 中，创建新引用：
       newref = ref.replace(b'refs/remotes/origin/', b'refs/heads/')
       if newref not in self._orig_refs:
-        p.stdin.write(b'create %s %s\n' % (newref, self._orig_refs[ref]))
-      p.stdin.write(b'delete %s %s\n' % (ref, self._orig_refs[ref]))
+        cmd = ['git', 'update-ref', '--no-deref', newref.decode(), self._orig_refs[ref].decode()]
+        result = subprocess.run(cmd, cwd=target_working_dir)
+        if result.returncode != 0:
+            raise SystemExit("git update-ref failed; see above")
+      # 删除旧引用
+      cmd = ['git', 'update-ref', '--no-deref', '-d', ref.decode(), self._orig_refs[ref].decode()]
+      result = subprocess.run(cmd, cwd=target_working_dir)
+      if result.returncode != 0:
+          raise SystemExit("git update-ref failed; see above")
+
       self._orig_refs[newref] = self._orig_refs[ref]
       del self._orig_refs[ref]
-    p.stdin.close()
-    if p.wait():
-      raise SystemExit(_("git update-ref failed; see above")) # pragma: no cover
 
     # Now remove
     if self._args.debug:
@@ -3745,58 +3752,52 @@ class RepoFilter(object):
       self._progress_writer.finish()
 
   def _ref_update(self, target_working_dir):
-    # Start the update-ref process
-    p = subproc.Popen('git update-ref --no-deref --stdin'.split(),
-                      stdin=subprocess.PIPE,
-                      cwd=target_working_dir)
-
     # Remove replace_refs from _orig_refs
-    replace_refs = {k:v for k, v in self._orig_refs.items()
-                    if k.startswith(b'refs/replace/')}
+    replace_refs = {k: v for k, v in self._orig_refs.items() if k.startswith(b'refs/replace/')}
     reverse_replace_refs = collections.defaultdict(list)
-    for k,v in replace_refs.items():
-      reverse_replace_refs[v].append(k)
+    for k, v in replace_refs.items():
+        reverse_replace_refs[v].append(k)
     all(map(self._orig_refs.pop, replace_refs))
 
     # Remove unused refs
     exported_refs, imported_refs = self.get_exported_and_imported_refs()
     refs_to_nuke = exported_refs - imported_refs
     if self._args.partial:
-      refs_to_nuke = set()
+        refs_to_nuke = set()
     if refs_to_nuke and self._args.debug:
-      print("[DEBUG] Deleting the following refs:\n  "+
-            decode(b"\n  ".join(refs_to_nuke)))
-    p.stdin.write(b''.join([b"delete %s\n" % x
-                           for x in refs_to_nuke]))
+        print("[DEBUG] Deleting the following refs:\n  " + decode(b"\n  ".join(refs_to_nuke)))
+    for ref in refs_to_nuke:
+        cmd = ['git', 'update-ref', '--no-deref', '-d', ref.decode()]
+        result = subprocess.run(cmd, cwd=target_working_dir)
+        if result.returncode != 0:
+            raise SystemExit("git update-ref failed; see above")
 
-    # Delete or update and add replace_refs; note that fast-export automatically
-    # handles 'update-no-add', we only need to take action for the other four
-    # choices for replace_refs.
+    # Delete or update and add replace_refs
     self._flush_renames()
-    actual_renames = {k:v for k,v in self._commit_renames.items() if k != v}
+    actual_renames = {k: v for k, v in self._commit_renames.items() if k != v}
     if self._args.replace_refs in ['delete-no-add', 'delete-and-add']:
-      # Delete old replace refs, if unwanted
-      replace_refs_to_nuke = set(replace_refs)
-      if self._args.replace_refs == 'delete-and-add':
-        # git-update-ref won't allow us to update a ref twice, so be careful
-        # to avoid deleting refs we'll later update
-        replace_refs_to_nuke = replace_refs_to_nuke.difference(
-                                 [b'refs/replace/'+x for x in actual_renames])
-      p.stdin.write(b''.join([b"delete %s\n" % x
-                             for x in replace_refs_to_nuke]))
-    if self._args.replace_refs in ['delete-and-add', 'update-or-add',
-                                   'update-and-add']:
-      # Add new replace refs
-      update_only = (self._args.replace_refs == 'update-or-add')
-      p.stdin.write(b''.join([b"update refs/replace/%s %s\n" % (old, new)
-                              for old,new in actual_renames.items()
-                              if new and not (update_only and
-                                              old in reverse_replace_refs)]))
+        # Delete old replace refs, if unwanted
+        replace_refs_to_nuke = set(replace_refs)
+        if self._args.replace_refs == 'delete-and-add':
+            # git-update-ref won't allow us to update a ref twice, so be careful
+            # to avoid deleting refs we'll later update
+            replace_refs_to_nuke = replace_refs_to_nuke.difference(
+                [b'refs/replace/' + x for x in actual_renames])
+        for ref in replace_refs_to_nuke:
+            cmd = ['git', 'update-ref', '--no-deref', '-d', ref.decode()]
+            result = subprocess.run(cmd, cwd=target_working_dir)
+            if result.returncode != 0:
+                raise SystemExit("git update-ref failed; see above")
 
-    # Complete the update-ref process
-    p.stdin.close()
-    if p.wait():
-      raise SystemExit(_("git update-ref failed; see above")) # pragma: no cover
+    if self._args.replace_refs in ['delete-and-add', 'update-or-add', 'update-and-add']:
+        # Add new replace refs
+        update_only = (self._args.replace_refs == 'update-or-add')
+        for old, new in actual_renames.items():
+            if new and not (update_only and old in reverse_replace_refs):
+                cmd = ['git', 'update-ref', '--no-deref', f'refs/replace/{old.decode()}', new.decode()]
+                result = subprocess.run(cmd, cwd=target_working_dir)
+                if result.returncode != 0:
+                    raise SystemExit("git update-ref failed; see above")
 
   def _record_metadata(self, metadata_dir, orig_refs):
     self._flush_renames()
