@@ -186,7 +186,7 @@ def get_earliest_commit_date(repo_path):
     return earliest_commit_date
 
 
-def show_earliest_commit_time():
+def show_earliest_commit_time(repo_path='.'):
     """
     展示仓库最早的提交时间 
     git show -s --format=%ci $(git rev-list --max-parents=0 HEAD)
@@ -196,5 +196,5 @@ def show_earliest_commit_time():
         subprocess.run(['git', 'show', '-s', '--format=%ci',
                        '$(git', 'rev-list', '--max-parents=0', 'HEAD)'], check=True)
     else:
-        earliest_commit_date = get_earliest_commit_date('.')
+        earliest_commit_date = get_earliest_commit_date(repo_path=repo_path)
         print(f"Earliest commit date: {earliest_commit_date}")
