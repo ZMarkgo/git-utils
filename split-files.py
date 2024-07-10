@@ -5,7 +5,9 @@ import argparse
 from common.TimeUtils import Timer
 from common.utils import copy_dir, remove_dir, list_gitignore_files, show_repo_size_info, remove_all_git_remotes, add_virtual_remote, create_branch, show_commit_count, show_earliest_commit_time
 
-def split_files(original_repo_path="", target_paths: list = [], new_repo_name="", new_repo_location="", new_branch_name=""):
+def split_files(original_repo_path="", target_paths: list = [], 
+                new_repo_name="", new_repo_location="", new_branch_name="",
+                track_gitignore=False):
     # 检查原始仓库是否存在
     if not os.path.isdir(os.path.join(original_repo_path, ".git")):
         print(
@@ -43,10 +45,11 @@ def split_files(original_repo_path="", target_paths: list = [], new_repo_name=""
     split_cmd = ['git', 'filter-repo']
     for target_file in target_paths:
         split_cmd.extend(['--path', target_file])
-    # 保留所有 gitignore 文件
-    gitignore_files = list_gitignore_files(new_repo_path)
-    for gitignore_file in gitignore_files:
-        split_cmd.extend(['--path', gitignore_file])
+    if track_gitignore:
+        # 保留所有 gitignore 文件
+        gitignore_files = list_gitignore_files(new_repo_path)
+        for gitignore_file in gitignore_files:
+            split_cmd.extend(['--path', gitignore_file])
     split_cmd.extend(['--force'])
     # split_cmd.extend(['--reencode=yes'])
     subprocess.run(split_cmd, check=True)
@@ -96,6 +99,9 @@ if __name__ == "__main__":
                         help="Location where the new repository will be created.")
     parser.add_argument("-nb", "--new_branch_name",
                         required=True, help="Name of the new branch.")
+    # 是否跟踪 .gitignore 文件
+    parser.add_argument("-ig", "--track_gitignore", action='store_true', default=False,
+                        help="Track .gitignore files.")
     args = parser.parse_args()
 
     original_repo_path = args.original_repo_path
@@ -103,13 +109,15 @@ if __name__ == "__main__":
     new_repo_name = args.new_repo_name
     new_repo_location = args.new_repo_location
     new_branch_name = args.new_branch_name
+    track_gitignore = args.track_gitignore
 
     try:
         split_files(original_repo_path=original_repo_path,
                     target_paths=target_paths,
                     new_repo_name=new_repo_name,
                     new_repo_location=new_repo_location,
-                    new_branch_name=new_branch_name)
+                    new_branch_name=new_branch_name,
+                    track_gitignore=track_gitignore)
     except Exception as e:
         print(f"Error: {e}")
 
