@@ -3,7 +3,7 @@ import sys
 import subprocess
 import argparse
 import time
-from utils import add_virtual_remote, delete_branch, show_commit_count, show_earliest_commit_time
+from common.utils import add_virtual_remote, delete_branch, show_commit_count, show_earliest_commit_time
 
 
 def split_module(original_repo_path, module_path, new_repo_name, new_repo_location):

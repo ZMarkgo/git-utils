@@ -1,6 +1,6 @@
-from utils import show_earliest_commit_time
+from common.utils import show_earliest_commit_time
 import argparse
-from TimeUtils import Timer
+from common.TimeUtils import Timer
 
 if __name__ == '__main__':
     timer = Timer()
