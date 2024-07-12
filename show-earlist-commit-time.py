@@ -1,4 +1,4 @@
-from common.utils import show_earliest_commit_time
+from common.GitUtils import show_earliest_commit_time
 import argparse
 from common.TimeUtils import Timer
 

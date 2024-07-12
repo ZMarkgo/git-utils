@@ -1,4 +1,4 @@
-from common.utils import show_commit_count
+from common.GitUtils import show_commit_count
 import argparse
 from common.TimeUtils import Timer
 
