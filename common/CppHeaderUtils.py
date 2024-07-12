@@ -51,7 +51,7 @@ def count_headers(abs_include_dirs):
     return count, invalid_dirs
 
 
-def find_headers(file_path, include_dirs):
+def find_all_headers(file_path, include_dirs):
     """
     递归查找给定C/C++源文件所包含的所有头文件。
     只处理绝对路径，返回的也都是绝对路径
@@ -103,7 +103,6 @@ def find_headers(file_path, include_dirs):
     return headers
 
 
-
 def param_process(repo_path, cpp_file_relative_path, include_dirs_relative_pahts):
     # 获取绝对路径
     cpp_file_path = os.path.join(repo_path, cpp_file_relative_path)
@@ -116,15 +115,15 @@ def param_process(repo_path, cpp_file_relative_path, include_dirs_relative_pahts
     return cpp_file_path, include_dirs
 
 
-def get_abs_headers(repo_path, cpp_file_relative_path, include_dirs_relative_pahts):
+def get_abs_headers(repo_path, cpp_file_relative_path, include_dirs_relative_pahts) -> list:
     cpp_file_path, include_dirs = param_process(
         repo_path, cpp_file_relative_path, include_dirs_relative_pahts)
 
-    headers = find_headers(cpp_file_path, include_dirs)
+    headers = find_all_headers(cpp_file_path, include_dirs)
     return headers
 
 
-def get_relative_headers(repo_path, cpp_file_relative_path, include_dirs_relative_pahts):
+def get_relative_headers(repo_path, cpp_file_relative_path, include_dirs_relative_pahts) -> list:
     headers = get_abs_headers(
         repo_path, cpp_file_relative_path, include_dirs_relative_pahts)
     headers = convert_to_relative_path(repo_path, headers)
