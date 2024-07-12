@@ -1,6 +1,6 @@
 from common.TimeUtils import Timer
 from common.GitFilesFilter import split_files
-from common.CppHeaderUtils import get_relateve_headers_of_files
+from common.CppHeaderUtils import get_relative_headers_of_files
 
 
 if __name__ == "__main__":
@@ -20,7 +20,7 @@ if __name__ == "__main__":
     ]
 
     target_paths = ['mm/memory.c', 'mm/hugetlb.c']
-    headers = get_relateve_headers_of_files(
+    headers = get_relative_headers_of_files(
         repo_path, target_paths, include_dirs_relative_pahts)
     target_paths.extend(headers)
 

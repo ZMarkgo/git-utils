@@ -131,7 +131,7 @@ def get_relative_headers(repo_path, cpp_file_relative_path, include_dirs_relativ
     return headers
 
 
-def get_relateve_headers_of_files(repo_path, cpp_files, include_dirs_relative_pahts) -> list:
+def get_relative_headers_of_files(repo_path, cpp_files, include_dirs_relative_pahts) -> list:
     headers = set()
     for cpp_file in cpp_files:
         headers.update(get_relative_headers(
@@ -141,7 +141,7 @@ def get_relateve_headers_of_files(repo_path, cpp_files, include_dirs_relative_pa
 
 def main():
     repo_path = r'D:\coding\zhurong-CodeWisdom\test_codes\linux-stable\linux-stable'  # 仓库路径
-    cpp_file_relative_path = 'mm/memory.c'  # 需要解析的C/CPP文件路径
+    cpp_file_relative_paths = ['mm/memory.c', 'mm/hugetlb.c']  # 需要解析的C/CPP文件路径
     include_dirs_relative_pahts = [
         './arch/x86/include',
         './arch/x86/include/generated',
@@ -156,10 +156,10 @@ def main():
     ]
 
     cpp_file_path, include_dirs = param_process(
-        repo_path, cpp_file_relative_path, include_dirs_relative_pahts)
+        repo_path, cpp_file_relative_paths[0], include_dirs_relative_pahts)
 
-    headers = get_relative_headers(
-        repo_path, cpp_file_relative_path, include_dirs_relative_pahts)
+    headers = get_relative_headers_of_files(
+        repo_path, cpp_file_relative_paths, include_dirs_relative_pahts)
 
     for header in headers:
         print(header)
