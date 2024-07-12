@@ -131,6 +131,14 @@ def get_relative_headers(repo_path, cpp_file_relative_path, include_dirs_relativ
     return headers
 
 
+def get_relateve_headers_of_files(repo_path, cpp_files, include_dirs_relative_pahts) -> list:
+    headers = set()
+    for cpp_file in cpp_files:
+        headers.update(get_relative_headers(
+            repo_path, cpp_file, include_dirs_relative_pahts))
+    return list(headers)
+
+
 def main():
     repo_path = r'D:\coding\zhurong-CodeWisdom\test_codes\linux-stable\linux-stable'  # 仓库路径
     cpp_file_relative_path = 'mm/memory.c'  # 需要解析的C/CPP文件路径
