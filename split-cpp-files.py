@@ -18,18 +18,17 @@ if __name__ == "__main__":
         './include/linux/kconfig.h',
         './include/linux/compiler_types.h'
     ]
-
     target_paths = ['mm/memory.c', 'mm/hugetlb.c']
-    headers = get_relative_headers_of_files(
-        repo_path, target_paths, include_dirs_relative_pahts)
-    target_paths.extend(headers)
-
     new_repo_name = 'linux-stable-split-demo3'
     new_repo_location = r"D:\coding\zhurong-CodeWisdom\test_codes"
     new_branch_name = 'demo3'
     track_gitignore = False
 
     try:
+        headers = get_relative_headers_of_files(
+            repo_path, target_paths, include_dirs_relative_pahts)
+        target_paths.extend(headers)
+
         split_files(original_repo_path=repo_path,
                     target_paths=target_paths,
                     new_repo_name=new_repo_name,
