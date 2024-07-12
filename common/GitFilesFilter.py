@@ -1,9 +1,10 @@
 import os
 import sys
 import subprocess
-from GitUtils import copy_dir, remove_dir, list_gitignore_files, show_repo_size_info, remove_all_git_remotes, add_virtual_remote, create_branch, show_commit_count, show_earliest_commit_time
+from common.GitUtils import copy_dir, remove_dir, list_gitignore_files, show_repo_size_info, remove_all_git_remotes, add_virtual_remote, create_branch, show_commit_count, show_earliest_commit_time
 
-def split_files(original_repo_path="", target_paths: list = [], 
+
+def split_files(original_repo_path="", target_paths: list = [],
                 new_repo_name="", new_repo_location="", new_branch_name="",
                 track_gitignore=False):
     # 检查原始仓库是否存在
