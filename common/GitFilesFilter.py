@@ -50,7 +50,6 @@ def split_files(original_repo_path="", target_paths: list = [],
         for gitignore_file in gitignore_files:
             split_cmd.extend(['--path', gitignore_file])
     split_cmd.extend(['--force'])
-    # split_cmd.extend(['--reencode=yes'])
     subprocess.run(split_cmd, check=True)
 
     # 仓库瘦身
