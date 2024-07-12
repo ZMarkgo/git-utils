@@ -17,6 +17,7 @@ def convert_to_relative_path(repo_dir, headers) -> list:
     header_relative_paths = []
     for header in headers:
         header_relative_path = os.path.relpath(header, repo_dir)
+        header_relative_path = normalize_path(header_relative_path)
         header_relative_paths.append(header_relative_path)
     return header_relative_paths
 
@@ -101,7 +102,6 @@ def find_headers(file_path, include_dirs):
     parse_file(file_path)
     return headers
 
-# 参数处理
 
 
 def param_process(repo_path, cpp_file_relative_path, include_dirs_relative_pahts):
