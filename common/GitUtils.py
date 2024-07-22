@@ -138,7 +138,7 @@ def get_commit_count(repo_path='.'):
     return result.stdout.decode('utf-8')
 
 
-def get_file_commits(repo_path, file_relative_path):
+def get_file_commits(repo_path, file_relative_path) -> list:
     """
     获取文件的提交记录
     """
@@ -154,6 +154,30 @@ def get_file_commits(repo_path, file_relative_path):
     commits = result.stdout.strip().split('\n')
 
     return commits
+
+
+def count_file_commits(repo_path, file_relative_path):
+    """
+    获取文件的提交记录
+    """
+    return len(get_file_commits(repo_path, file_relative_path))
+
+
+def get_files_commits(repo_path, file_relative_paths) -> list:
+    """
+    获取多个文件的提交记录
+    """
+    commits = set()
+    for file_relative_path in file_relative_paths:
+        commits.update(get_file_commits(repo_path, file_relative_path))
+    return list(commits)
+
+
+def count_files_commits(repo_path, file_relative_paths):
+    """
+    获取多个文件的提交记录
+    """
+    return len(get_files_commits(repo_path, file_relative_paths))
 
 
 def checkout_commit(repo_path, commit_hash):
