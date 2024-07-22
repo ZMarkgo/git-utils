@@ -3,8 +3,14 @@ import time
 class Timer:
     def __init__(self) -> None:
         self.time_start = time.time()
+        self.time_cur = time.time()
         self.time_end = None
     
+    def lap_and_show(self):
+        time_now = time.time()
+        print(f'Lap time: {time_now - self.time_cur:.2f}s')
+        self.time_cur = time_now
+
     def end(self):
         self.time_end = time.time()
     
