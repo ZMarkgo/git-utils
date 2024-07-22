@@ -138,6 +138,39 @@ def get_commit_count(repo_path='.'):
     return result.stdout.decode('utf-8')
 
 
+def get_file_commits(repo_path, file_relative_path):
+    """
+    获取文件的提交记录
+    """
+    # 使用git log命令获取文件的提交记录
+    result = subprocess.run(
+        ['git', '-C', repo_path, 'log', '--pretty=format:%H', file_relative_path],
+        capture_output=True,
+        text=True,
+        check=True
+    )
+
+    # 提交记录以换行符分隔
+    commits = result.stdout.strip().split('\n')
+
+    return commits
+
+
+def checkout_commit(repo_path, commit_hash):
+    """
+    检出指定的提交
+    :return: 如果检出成功则返回True，否则返回False
+    """
+    try:
+        # 使用git checkout命令检出指定的提交
+        subprocess.run(
+            ['git', '-C', repo_path, 'checkout', commit_hash], check=True)
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"Error: {e}")
+        return False
+
+
 def show_commit_count(repo_path='.'):
     commit_count = get_commit_count(repo_path=repo_path)
     print(f"Commit count: {commit_count}")
