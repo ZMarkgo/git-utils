@@ -19,14 +19,15 @@ if __name__ == "__main__":
         './include/linux/compiler_types.h'
     ]
     target_paths = ['mm/memory.c', 'mm/hugetlb.c']
-    new_repo_name = 'linux-stable-split-demo2-careful-headers'
+    new_repo_name = 'linux-stable-split-demo2-careful-headers-no-rec'
     new_repo_location = r"D:\coding\zhurong-CodeWisdom\test_codes"
     new_branch_name = 'demo3'
     track_gitignore = False
 
     try:
         headers = get_relative_headers_of_files(
-            repo_path, target_paths, include_dirs_relative_pahts)
+            repo_path, target_paths, include_dirs_relative_pahts, False)
+        timer.lap_and_show()
         target_paths.extend(headers)
         print(f"target file or dir num: {len(target_paths)}")
         split_files(original_repo_path=repo_path,
