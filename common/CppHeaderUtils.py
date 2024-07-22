@@ -1,5 +1,6 @@
 import os
 import re
+from common.GitUtils import get_file_commits, checkout_commit
 
 
 def normalize_path(path):
@@ -184,6 +185,22 @@ def get_relative_headers_of_files(repo_path, cpp_files, include_dirs_relative_pa
     return list(headers)
 
 
+def get_relative_headers_of_files_all_commits(repo_path, cpp_files, include_dirs_relative_pahts, shouldRecursion=True) -> list:
+    commits = set()
+    for cpp_file in cpp_files:
+        commits.update(get_file_commits(repo_path, cpp_file))
+
+    headers = set()
+    for commit in commits:
+        if checkout_commit(repo_path, commit) == False:
+            continue
+        for cpp_file in cpp_files:
+            headers.update(get_relative_headers(
+                repo_path, cpp_file, include_dirs_relative_pahts, shouldRecursion))
+
+    return list(headers)
+
+
 def demo1_recursion():
     repo_path = r'D:\coding\zhurong-CodeWisdom\test_codes\linux-stable\linux-stable'  # 仓库路径
     cpp_file_relative_paths = ['mm/memory.c', 'mm/hugetlb.c']  # 需要解析的C/CPP文件路径
@@ -250,9 +267,34 @@ def demo2_no_recursion():
         print(dir)
 
 
-def main():
-    demo2_no_recursion()
+def demo3_all_commits_recursion():
+    repo_path = r'D:\coding\zhurong-CodeWisdom\test_codes\linux-stable\linux-stable'
+    cpp_file_relative_paths = ['mm/memory.c', 'mm/hugetlb.c']  # 需要解析的C/CPP文件路径
+    include_dirs_relative_pahts = [
+        './arch/x86/include',
+        './arch/x86/include/generated',
+        './include',
+        './arch/x86/include/uapi',
+        './arch/x86/include/generated/uapi',
+        './include/uapi',
+        './include/generated/uapi',
+        './include/linux/compiler-version.h',
+        './include/linux/kconfig.h',
+        './include/linux/compiler_types.h'
+    ]
 
+    cpp_file_path, include_dirs = param_process(
+        repo_path, cpp_file_relative_paths[0], include_dirs_relative_pahts)
 
-if __name__ == "__main__":
-    main()
+    headers = get_relative_headers_of_files_all_commits(
+        repo_path, cpp_file_relative_paths, include_dirs_relative_pahts, True)
+
+    for header in headers:
+        print(header)
+
+    print("=======================================================")
+    all, invalid_dirs = count_headers(include_dirs)
+    print(f"Total/filtered/invalid: {all}/{len(headers)}/{len(invalid_dirs)}")
+    print("Invalid directories:")
+    for dir in invalid_dirs:
+        print(dir)
