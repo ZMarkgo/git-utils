@@ -1,4 +1,4 @@
-def print_sep(title, len=80, sep="="):
+def print_sep(title: str, len=80, sep="="):
     """
     带有分隔符的打印，确定打印一行的长度
     :param title: 标题
