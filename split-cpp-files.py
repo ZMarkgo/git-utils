@@ -5,7 +5,7 @@ from common.CppHeaderUtils import get_relative_headers_of_files
 
 if __name__ == "__main__":
     timer = Timer()
-    repo_path = r'D:\coding\zhurong-CodeWisdom\test_codes\linux-stable-split-demo2'  # 仓库路径
+    repo_path = r'/mnt/d/coding/zhurong-CodeWisdom/test_codes/linux-stable/linux-stable'  # 仓库路径
     include_dirs_relative_pahts = [
         './arch/x86/include',
         './arch/x86/include/generated',
@@ -19,15 +19,16 @@ if __name__ == "__main__":
         './include/linux/compiler_types.h'
     ]
     target_paths = ['mm/memory.c', 'mm/hugetlb.c']
-    new_repo_name = 'linux-stable-split-demo2-careful-headers-no-rec'
-    new_repo_location = r"D:\coding\zhurong-CodeWisdom\test_codes"
-    new_branch_name = 'demo3'
+    new_repo_name = 'linux-stable-split-demo2-careful-headers-perf-test'
+    new_repo_location = r"/mnt/d/coding/zhurong-CodeWisdom/test_codes"
+    new_branch_name = 'demo'
     track_gitignore = False
 
     try:
+        timer.lap()
         headers = get_relative_headers_of_files(
-            repo_path, target_paths, include_dirs_relative_pahts, False)
-        timer.lap_and_show()
+            repo_path, target_paths, include_dirs_relative_pahts, True)
+        timer.lap_and_show("Get headers")
         target_paths.extend(headers)
         print(f"target file or dir num: {len(target_paths)}")
         split_files(original_repo_path=repo_path,
