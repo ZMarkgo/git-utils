@@ -277,12 +277,6 @@ def get_earliest_commit_date(repo_path):
 def show_earliest_commit_time(repo_path='.'):
     """
     展示仓库最早的提交时间 
-    git show -s --format=%ci $(git rev-list --max-parents=0 HEAD)
     """
-    # 如果是linux系统
-    if os.name == 'posix':
-        subprocess.run(['git', 'show', '-s', '--format=%ci',
-                       '$(git', 'rev-list', '--max-parents=0', 'HEAD)'], check=True)
-    else:
-        earliest_commit_date = get_earliest_commit_date(repo_path=repo_path)
-        print(f"Earliest commit date: {earliest_commit_date}")
+    earliest_commit_date = get_earliest_commit_date(repo_path=repo_path)
+    print(f"Earliest commit date: {earliest_commit_date}")
