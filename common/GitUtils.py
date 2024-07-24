@@ -234,18 +234,14 @@ def get_commit_message(repo_path, commit_hash):
     :param commit_hash: 提交哈希
     :return: 提交信息，如果失败则返回None
     """
-    if checkout_commit(repo_path, commit_hash):
-        try:
-            # 使用git show命令获取提交信息
-            result = subprocess.run(
-                ['git', '-C', repo_path, 'show', '-s', '--format=%B', commit_hash],
-                capture_output=True, text=True, check=True)
-            return result.stdout.strip()
-        except subprocess.CalledProcessError as e:
-            print(f"Error: {e}")
-            return None
-    else:
-        print("Checkout failed. Could not retrieve commit message.")
+    try:
+        # 使用git log命令获取提交信息
+        result = subprocess.run(
+            ['git', '-C', repo_path, 'log', '--format=%B', '-n', '1', commit_hash],
+            capture_output=True, text=True, check=True)
+        return result.stdout.strip()
+    except subprocess.CalledProcessError as e:
+        print(f"Error: {e}")
         return None
 
 
