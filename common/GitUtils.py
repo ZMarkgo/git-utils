@@ -214,6 +214,8 @@ def count_files_commits(repo_path, file_relative_paths):
 def checkout_commit(repo_path, commit_hash):
     """
     检出指定的提交
+    :param repo_path: 仓库路径
+    :param commit_hash: 提交哈希
     :return: 如果检出成功则返回True，否则返回False
     """
     try:
@@ -224,6 +226,27 @@ def checkout_commit(repo_path, commit_hash):
     except subprocess.CalledProcessError as e:
         print(f"Error: {e}")
         return False
+
+def get_commit_message(repo_path, commit_hash):
+    """
+    获取指定提交的提交信息
+    :param repo_path: 仓库路径
+    :param commit_hash: 提交哈希
+    :return: 提交信息，如果失败则返回None
+    """
+    if checkout_commit(repo_path, commit_hash):
+        try:
+            # 使用git show命令获取提交信息
+            result = subprocess.run(
+                ['git', '-C', repo_path, 'show', '-s', '--format=%B', commit_hash],
+                capture_output=True, text=True, check=True)
+            return result.stdout.strip()
+        except subprocess.CalledProcessError as e:
+            print(f"Error: {e}")
+            return None
+    else:
+        print("Checkout failed. Could not retrieve commit message.")
+        return None
 
 
 def show_commit_count(repo_path='.'):
