@@ -6,9 +6,12 @@ class Timer:
         self.time_cur = time.time()
         self.time_end = None
     
-    def lap_and_show(self):
+    def lap(self):
+        self.time_cur = time.time()
+    
+    def lap_and_show(self, message="Lap time"):
         time_now = time.time()
-        print(f'Lap time: {time_now - self.time_cur:.2f}s')
+        print(f'{message}: {time_now - self.time_cur:.2f}s')
         self.time_cur = time_now
 
     def end(self):
