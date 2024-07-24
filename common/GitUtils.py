@@ -16,7 +16,8 @@ def copy_dir(src, dest):
     """
     # 如果是Linux系统
     if os.name == 'posix':
-        result = subprocess.run(['cp', '-r', src, dest], capture_output=True, text=True)
+        result = subprocess.run(['cp', '-r', src, dest],
+                                capture_output=True, text=True)
     else:
         # 确保目标目录的父目录存在
         dest_parent_dir = os.path.dirname(dest)
@@ -27,14 +28,17 @@ def copy_dir(src, dest):
         # /E 复制所有子目录，包括空的
         # /COPY:DAT 复制文件数据、属性和时间戳
         # /R:0 不重试失败的复制
-        result = subprocess.run(['robocopy', src, dest, '/E', '/COPY:DAT', '/R:0'], capture_output=True, text=True)
+        result = subprocess.run(
+            ['robocopy', src, dest, '/E', '/COPY:DAT', '/R:0'], capture_output=True, text=True)
 
     # 处理结果
     if result.returncode != 0:
-        print(f"Error: Command returned non-zero exit status {result.returncode}.")
+        print(
+            f"Error: Command returned non-zero exit status {result.returncode}.")
         print("Error:", result.stderr)
     else:
         print("Command executed successfully.")
+
 
 def remove_dir(path):
     """
@@ -146,6 +150,23 @@ def get_commit_count(repo_path='.'):
         ['git', 'rev-list', '--count', 'HEAD'], stdout=subprocess.PIPE)
     os.chdir(working_dir)
     return result.stdout.decode('utf-8')
+
+
+def get_all_commits(repo_path='.') -> list:
+    """
+    获取所有提交记录
+    """
+    result = subprocess.run(
+        ['git', '-C', repo_path, 'log', '--pretty=format:%H'],
+        capture_output=True,
+        text=True,
+        check=True
+    )
+
+    # 提交记录以换行符分隔
+    commits = result.stdout.strip().split('\n')
+
+    return commits
 
 
 def get_file_commits(repo_path, file_relative_path) -> list:
