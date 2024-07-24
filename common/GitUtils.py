@@ -227,6 +227,7 @@ def checkout_commit(repo_path, commit_hash):
         print(f"Error: {e}")
         return False
 
+
 def get_commit_message(repo_path, commit_hash):
     """
     获取指定提交的提交信息
@@ -243,6 +244,21 @@ def get_commit_message(repo_path, commit_hash):
     except subprocess.CalledProcessError as e:
         print(f"Error: {e}")
         return None
+
+
+def get_commit_files(repo_path, commit_hash) -> list:
+    """
+    获取指定提交修改的文件
+    :param repo_path: 仓库路径
+    :param commit_hash: 提交哈希
+    :return: 修改的文件列表
+    """
+    result = subprocess.run(
+        ['git', '-C', repo_path, 'show', '--name-only',
+            '--pretty=format:', commit_hash],
+        stdout=subprocess.PIPE, text=True
+    )
+    return result.stdout.splitlines()
 
 
 def show_commit_count(repo_path='.'):
