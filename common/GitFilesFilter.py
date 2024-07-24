@@ -2,11 +2,15 @@ import os
 import sys
 import subprocess
 from common.GitUtils import copy_dir, remove_dir, list_gitignore_files, show_repo_size_info, remove_all_git_remotes, add_virtual_remote, create_branch, show_commit_count, show_earliest_commit_time
+from common.TimeUtils import Timer
 
 
 def split_files(original_repo_path="", target_paths: list = [],
                 new_repo_name="", new_repo_location="", new_branch_name="",
-                track_gitignore=False):
+                track_gitignore=False,
+                timer: Timer = None):
+    if timer:
+        timer.lap()
     # 检查原始仓库是否存在
     if not os.path.isdir(os.path.join(original_repo_path, ".git")):
         print(
@@ -28,6 +32,8 @@ def split_files(original_repo_path="", target_paths: list = [],
     if not new_branch_name:
         print("Error: The new_branch_name is empty.")
         sys.exit(1)
+    if timer:
+        timer.lap_and_show("Check parameters")
 
     print("========================复制仓库========================")
     # 复制原始仓库到新的位置
@@ -38,6 +44,9 @@ def split_files(original_repo_path="", target_paths: list = [],
 
     # 切换到仓库
     os.chdir(new_repo_path)
+
+    if timer:
+        timer.lap_and_show("Copy repo")
 
     print("========================提取文件及其历史========================")
     # 使用 git filter-repo 提取指定文件的历史记录
@@ -51,6 +60,9 @@ def split_files(original_repo_path="", target_paths: list = [],
             split_cmd.extend(['--path', gitignore_file])
     split_cmd.extend(['--force'])
     subprocess.run(split_cmd, check=True)
+
+    if timer:
+        timer.lap_and_show("Extract files and history")
 
     # 仓库瘦身
     print("========================仓库瘦身========================")
@@ -66,15 +78,24 @@ def split_files(original_repo_path="", target_paths: list = [],
     print("After:")
     show_repo_size_info()
 
+    if timer:
+        timer.lap_and_show("Slim repo")
+
     # 为新仓库添加虚拟远程仓库
     print("========================添加虚拟远程仓库========================")
     remove_all_git_remotes()
     add_virtual_remote(new_repo_name)
 
+    if timer:
+        timer.lap_and_show("Add virtual remote")
+
     # 创建新分支
     print("========================创建新分支========================")
     print(f"New branch name: {new_branch_name}")
     create_branch(new_branch_name)
+
+    if timer:
+        timer.lap_and_show("Create new branch")
 
     print("========================处理完成========================")
     # 展示提交数
