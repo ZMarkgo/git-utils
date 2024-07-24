@@ -5,7 +5,8 @@ from common.CppHeaderUtils import get_relative_headers_of_files
 
 if __name__ == "__main__":
     timer = Timer()
-    repo_path = r'/mnt/d/coding/zhurong-CodeWisdom/test_codes/linux-stable/linux-stable'  # 仓库路径
+    repo_path = r'/home/app/repository/linux'
+    # TODO 不同的提取可能需要不同的头文件路径
     include_dirs_relative_pahts = [
         './arch/x86/include',
         './arch/x86/include/generated',
@@ -19,8 +20,8 @@ if __name__ == "__main__":
         './include/linux/compiler_types.h'
     ]
     target_paths = ['mm/memory.c', 'mm/hugetlb.c']
-    new_repo_name = 'linux-stable-split-demo2-careful-headers-perf-test'
-    new_repo_location = r"/mnt/d/coding/zhurong-CodeWisdom/test_codes"
+    new_repo_name = 'linux-split-memory-failure-careful-headers'
+    new_repo_location = r"/home/app/repository/"
     new_branch_name = 'demo'
     track_gitignore = False
 
