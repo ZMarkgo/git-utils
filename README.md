@@ -28,6 +28,16 @@ python3 split-module.py -o D:/coding/zhurong-CodeWisdom/test_codes/OS-23Fall-FDU
 
 ```shell
 pip install git-filter-repo
+# or
+pip3 install git-filter-repo
+```
+
+pip3安装
+
+```shell
+sudo apt update
+sudo apt install python3-pip
+pip3 --version
 ```
 
 ```shell
