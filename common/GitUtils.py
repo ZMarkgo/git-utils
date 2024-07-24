@@ -211,6 +211,14 @@ def count_files_commits(repo_path, file_relative_paths):
     return len(get_files_commits(repo_path, file_relative_paths))
 
 
+def show_count_files_commits(repo_path, file_relative_paths):
+    """
+    显示多个文件的提交记录
+    """
+    commits = get_files_commits(repo_path, file_relative_paths)
+    print(f"Commits count of {file_relative_paths}: \n\t{len(commits)}")
+
+
 def checkout_commit(repo_path, commit_hash):
     """
     检出指定的提交
