@@ -14,17 +14,27 @@ def copy_dir(src, dest):
     :param src: 源目录路径
     :param dest: 目标目录路径
     """
-    # 如果是linux系统
+    # 如果是Linux系统
     if os.name == 'posix':
-        subprocess.run(['cp', '-r', src, dest], check=True)
+        result = subprocess.run(['cp', '-r', src, dest], capture_output=True, text=True)
     else:
         # 确保目标目录的父目录存在
         dest_parent_dir = os.path.dirname(dest)
         if not os.path.exists(dest_parent_dir):
             os.makedirs(dest_parent_dir)
-        # 复制目录
-        shutil.copytree(src, dest)
 
+        # 使用robocopy进行目录复制
+        # /E 复制所有子目录，包括空的
+        # /COPY:DAT 复制文件数据、属性和时间戳
+        # /R:0 不重试失败的复制
+        result = subprocess.run(['robocopy', src, dest, '/E', '/COPY:DAT', '/R:0'], capture_output=True, text=True)
+
+    # 处理结果
+    if result.returncode != 0:
+        print(f"Error: Command returned non-zero exit status {result.returncode}.")
+        print("Error:", result.stderr)
+    else:
+        print("Command executed successfully.")
 
 def remove_dir(path):
     """
