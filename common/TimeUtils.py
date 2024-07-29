@@ -48,7 +48,7 @@ class Timer:
         self.end()
         self.show_time_cost()
 
-    def show_time_cost(self):
-        time_cost_in_seconds = self.time_end - self.time_start
+    def show_time_cost(self, message="Time cost"):
+        time_cost_in_seconds = time.time() - self.time_start
         print(
-            f'Time cost: {format_all_time(time_cost_in_seconds)}')
+            f'{message}: {format_all_time(time_cost_in_seconds)}')
