@@ -274,6 +274,20 @@ def show_commit_count(repo_path='.'):
     print(f"Commit count: {commit_count}")
 
 
+def get_commit_diff(repo_path, commit_hash):
+    """
+    获取指定提交的差异内容
+    """
+    try:
+        result = subprocess.run(['git', '-C', repo_path, 'show', commit_hash], check=True,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                                errors='replace')
+        return result.stdout
+    except subprocess.CalledProcessError as e:
+        print(f"Error occurred: {e.stderr}")
+        return None
+
+
 def get_repo_size():
     """
     获取仓库的大小信息 git count-objects -v
