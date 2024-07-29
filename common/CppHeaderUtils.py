@@ -195,9 +195,9 @@ def get_relative_headers_of_files(repo_path, cpp_files, include_dirs_relative_pa
     return list(headers)
 
 
-def extract_include_changes(diff_text):
+def extract_include_header_changes(diff_text):
     """
-    从差异内容中提取修改的 #include 语句
+    从差异内容中提取修改的头文件
     """
     include_pattern = generate_include_header_regex()
     changes = []
@@ -213,7 +213,7 @@ def extract_include_changes(diff_text):
         elif in_diff and (line.startswith('+') or line.startswith('-')):
             include_match = include_pattern.search(line)
             if include_match:
-                changes.append(line)
+                changes.append(include_match)
 
     return changes
 
@@ -228,7 +228,7 @@ def get_diff_headers_of_files_all_commits(repo_path, cpp_files) -> list:
     # 使用tqdm显示进度条
     for commit in tqdm(commits, desc="Processing commits", unit="commit"):
         diff_text = get_commit_diff(repo_path, commit)
-        include_changes = extract_include_changes(diff_text)
+        include_changes = extract_include_header_changes(diff_text)
         headers.update(include_changes)
 
     return list(headers)
@@ -236,14 +236,17 @@ def get_diff_headers_of_files_all_commits(repo_path, cpp_files) -> list:
 
 def get_relative_headers_of_files_all_commits(repo_path, cpp_files, include_dirs_relative_pahts, shouldRecursion=True, timer: Timer = None) -> list:
     timer.lap()
+
     headers = set()
     headers.update(get_relative_headers_of_files(
         repo_path, cpp_files, include_dirs_relative_pahts, shouldRecursion))
-    timer.lap_and_show("get_relative_headers_of_files")
     len_before = len(headers)
+    timer.lap_and_show("get_relative_headers_of_files")
+
     headers.update(get_diff_headers_of_files_all_commits(repo_path, cpp_files))
-    timer.lap_and_show("get_diff_headers_of_files_all_commits")
     len_after = len(headers)
+    timer.lap_and_show("get_diff_headers_of_files_all_commits")
+
     print(f"headers: {len_before} -> {len_after}")
     return list(headers)
 
