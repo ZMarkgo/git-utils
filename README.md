@@ -1,5 +1,11 @@
 # Git Utils
 
+# 完整依赖安装
+
+```shell
+pip install -r requirements.txt
+```
+
 # 使用方式
 
 ## 分割单个模块 `split-module.py`
