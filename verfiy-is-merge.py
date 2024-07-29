@@ -20,6 +20,16 @@ if __name__ == '__main__':
 
     same_commits = set_files_commits & set_all_commits
     print(f"same_commits: {len(same_commits)}")
+    for commit in same_commits:
+        msg = get_commit_message(repo_path, commit)
+        files = get_commit_files(repo_path, commit)
+        # msg 是否包含 "Merge" 字符串
+        commit_content = {
+            "commit": commit,
+            "files": files,
+            "msg": msg
+        }
+        print(commit_content)
 
     different_commits = set_all_commits - set_files_commits
     print(f"different_commits: {len(different_commits)}")
