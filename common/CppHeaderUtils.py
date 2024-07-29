@@ -1,6 +1,8 @@
 import os
 import re
-from common.GitUtils import get_file_commits, checkout_commit
+from tqdm import tqdm
+from common.GitUtils import get_file_commits, get_commit_diff
+from common.TimeUtils import Timer
 
 
 def normalize_path(path):
@@ -52,6 +54,14 @@ def count_headers(abs_include_dirs):
     return count, invalid_dirs
 
 
+def generate_include_header_regex():
+    """
+    生成匹配头文件的正则表达式。
+    """
+    include_pattern = r'#include\s+[<"]([^">]+)[">]'
+    return re.compile(include_pattern)
+
+
 def find_all_headers(file_path, include_dirs):
     """
     递归查找给定C/C++源文件所包含的所有头文件。
@@ -62,7 +72,7 @@ def find_all_headers(file_path, include_dirs):
     :return: 包含所有需要的头文件绝对路径的集合。
     """
     headers = set()
-    include_pattern = re.compile(r'#include\s+[<"]([^">]+)[">]')
+    include_pattern = generate_include_header_regex()
 
     for dir in include_dirs:
         # dir 是文件路径
@@ -185,19 +195,56 @@ def get_relative_headers_of_files(repo_path, cpp_files, include_dirs_relative_pa
     return list(headers)
 
 
-def get_relative_headers_of_files_all_commits(repo_path, cpp_files, include_dirs_relative_pahts, shouldRecursion=True) -> list:
+def extract_include_changes(diff_text):
+    """
+    从差异内容中提取修改的 #include 语句
+    """
+    include_pattern = generate_include_header_regex()
+    changes = []
+
+    diff_lines = diff_text.splitlines()
+    in_diff = False
+
+    for line in diff_lines:
+        if line.startswith('diff --git'):
+            in_diff = True
+        elif in_diff and (line.startswith('---') or line.startswith('+++')):
+            continue
+        elif in_diff and (line.startswith('+') or line.startswith('-')):
+            include_match = include_pattern.search(line)
+            if include_match:
+                changes.append(line)
+
+    return changes
+
+
+def get_diff_headers_of_files_all_commits(repo_path, cpp_files) -> list:
     commits = set()
-    for cpp_file in cpp_files:
+    for cpp_file in tqdm(cpp_files, desc="Processing cpp_files", unit="file"):
         commits.update(get_file_commits(repo_path, cpp_file))
 
     headers = set()
-    for commit in commits:
-        if checkout_commit(repo_path, commit) == False:
-            continue
-        for cpp_file in cpp_files:
-            headers.update(get_relative_headers(
-                repo_path, cpp_file, include_dirs_relative_pahts, shouldRecursion))
 
+    # 使用tqdm显示进度条
+    for commit in tqdm(commits, desc="Processing commits", unit="commit"):
+        diff_text = get_commit_diff(repo_path, commit)
+        include_changes = extract_include_changes(diff_text)
+        headers.update(include_changes)
+
+    return list(headers)
+
+
+def get_relative_headers_of_files_all_commits(repo_path, cpp_files, include_dirs_relative_pahts, shouldRecursion=True, timer: Timer = None) -> list:
+    timer.lap()
+    headers = set()
+    headers.update(get_relative_headers_of_files(
+        repo_path, cpp_files, include_dirs_relative_pahts, shouldRecursion))
+    timer.lap_and_show("get_relative_headers_of_files")
+    len_before = len(headers)
+    headers.update(get_diff_headers_of_files_all_commits(repo_path, cpp_files))
+    timer.lap_and_show("get_diff_headers_of_files_all_commits")
+    len_after = len(headers)
+    print(f"headers: {len_before} -> {len_after}")
     return list(headers)
 
 
