@@ -1,7 +1,7 @@
 import os
 import sys
 import subprocess
-from common.GitUtils import copy_dir, remove_dir, list_gitignore_files, get_repo_size_info, print_repo_size_change_info, remove_all_git_remotes, add_virtual_remote, create_branch, show_commit_count, show_earliest_commit_time
+from common.GitUtils import copy_dir, remove_dir, list_gitignore_files, get_repo_size_info, get_repo_size_change_info, remove_all_git_remotes, add_virtual_remote, create_branch, show_commit_count, show_earliest_commit_time
 from common.TimeUtils import Timer
 from common.PrintUtils import print_sep
 from common.Logger import Logger
@@ -83,7 +83,7 @@ def split_files(original_repo_path="", target_paths: list = [],
     if preserve_commit_hashes:
         split_cmd.extend(['--preserve-commit-hashes'])
     print(f"Target path and path-glob num: {len(added_targets_set)}")
-    # logger.info(f"Running command: {' '.join(split_cmd)}")
+    logger.info(f"Running command: {' '.join(split_cmd)}")
     subprocess.run(split_cmd, check=True)
 
     if timer:
@@ -100,7 +100,8 @@ def split_files(original_repo_path="", target_paths: list = [],
                    '--expire=now', '--all'], check=True)
     subprocess.run(['git', 'gc', '--prune=now', '--aggressive'], check=True)
     repo_size_after = get_repo_size_info()
-    print_repo_size_change_info(repo_size_before, repo_size_after)
+    change_info = get_repo_size_change_info(repo_size_before, repo_size_after)
+    logger.info_print(change_info)
 
     if timer:
         timer.lap_and_show("Slim repo")

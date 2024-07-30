@@ -318,14 +318,15 @@ class RepoSizeInfo:
                f"size-garbage: {self.size_garbage}"
 
 
-def print_repo_size_change_info(before: RepoSizeInfo, after: RepoSizeInfo):
-    print(f"size: {before.size} -> {after.size}\n"
-          f"in-pack: {before.in_pack} -> {after.in_pack}\n"
-          f"packs: {before.packs} -> {after.packs}\n"
-          f"size-pack: {before.size_pack} -> {after.size_pack}\n"
-          f"prune-packable: {before.prune_packable} -> {after.prune_packable}\n"
-          f"garbage: {before.garbage} -> {after.garbage}\n"
-          f"size-garbage: {before.size_garbage} -> {after.size_garbage}")
+def get_repo_size_change_info(before: RepoSizeInfo, after: RepoSizeInfo) -> str:
+    return \
+        f"size: {before.size} -> {after.size}\n" \
+        f"in-pack: {before.in_pack} -> {after.in_pack}\n" \
+        f"packs: {before.packs} -> {after.packs}\n" \
+        f"size-pack: {before.size_pack} -> {after.size_pack}\n" \
+        f"prune-packable: {before.prune_packable} -> {after.prune_packable}\n" \
+        f"garbage: {before.garbage} -> {after.garbage}\n" \
+        f"size-garbage: {before.size_garbage} -> {after.size_garbage}"
 
 
 def get_repo_size_info() -> RepoSizeInfo:
