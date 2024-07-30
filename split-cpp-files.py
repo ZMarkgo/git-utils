@@ -19,17 +19,25 @@ def main():
         './include/linux/kconfig.h',
         './include/linux/compiler_types.h'
     ]
-    target_paths = ['linux/sysctl.h']
-    new_repo_name = 'linux-split-sysctl-h-test'
+    target_paths = ['mm/memory-failure.c']
+    new_repo_name = 'linux-split-memory-failure-test'
     new_repo_location = r"/home/app/repository"
     new_branch_name = 'demo'
     track_gitignore = False
 
     try:
         timer.lap()
-        headers = get_relative_headers_of_files_all_commits(
-            repo_path, target_paths, include_dirs_relative_pahts,
-            shouldRecursion=True, timer=timer)
+        # headers = get_relative_headers_of_files_all_commits(
+        #     repo_path, target_paths, include_dirs_relative_pahts,
+        #     shouldRecursion=True, timer=timer)
+        # TODO 暂时从文件中读取头文件路径
+        file_path = r'/home/app/repository/git-utils/split-headers-commits.log'
+        headers = []
+        with open(file_path, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line.endswith('.h'):
+                    headers.append(line)
         timer.show_time_cost("Get headers")
         target_paths.extend(headers)
         print(f"target file or dir num: {len(target_paths)}")
