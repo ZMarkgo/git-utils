@@ -1,5 +1,6 @@
 import os
 import re
+from typing import Set, Tuple
 from tqdm import tqdm
 from common.GitUtils import get_file_commits, get_commit_diff
 from common.TimeUtils import Timer
@@ -62,16 +63,17 @@ def generate_include_header_regex():
     return re.compile(include_pattern)
 
 
-def find_all_headers(file_path, include_dirs):
+def find_all_headers(file_path, include_dirs) -> Tuple[Set[str], Set[str]]:
     """
     递归查找给定C/C++源文件所包含的所有头文件。
     只处理绝对路径，返回的也都是绝对路径
 
     :param file_path: C/C++源文件的绝对路径。
     :param include_dirs: 需要搜索头文件的目录列表。
-    :return: 包含所有需要的头文件绝对路径的集合。
+    :return: headers, unexist_headers
     """
     headers = set()
+    unexist_headers = set()
     include_pattern = generate_include_header_regex()
 
     for dir in include_dirs:
@@ -109,12 +111,14 @@ def find_all_headers(file_path, include_dirs):
                 header_path = get_header_path(match)
                 if header_path:
                     parse_file(header_path)
+                else:
+                    unexist_headers.add(match)
 
     parse_file(file_path)
-    return headers
+    return headers, unexist_headers
 
 
-def find_src_include_headers(file_path, include_dirs):
+def find_src_include_headers(file_path, include_dirs) -> Tuple[Set[str], Set[str]]:
     """
     查找给定C/C++源文件所包含的所有头文件，不进行递归查找。
     只处理绝对路径，返回的也都是绝对路径
@@ -124,7 +128,8 @@ def find_src_include_headers(file_path, include_dirs):
     :return: 包含所有需要的头文件绝对路径的集合。
     """
     headers = set()
-    include_pattern = re.compile(r'#include\s+[<"]([^">]+)[">]')
+    unexist_headers = set()
+    include_pattern = generate_include_header_regex()
 
     for dir in include_dirs:
         # dir 是文件路径
@@ -153,10 +158,12 @@ def find_src_include_headers(file_path, include_dirs):
         content = file.read()
         for match in include_pattern.findall(content):
             header_path = get_header_path(match)
-            if header_path and os.path.exists(header_path):
+            if header_path:
                 header_path = normalize_path(header_path)
                 headers.add(header_path)
-    return headers
+            else:
+                unexist_headers.add(match)
+    return headers, unexist_headers
 
 
 def param_process(repo_path, cpp_file_relative_path, include_dirs_relative_pahts):
@@ -171,7 +178,7 @@ def param_process(repo_path, cpp_file_relative_path, include_dirs_relative_pahts
     return cpp_file_path, include_dirs
 
 
-def get_abs_headers(repo_path, cpp_file_relative_path, include_dirs_relative_pahts, shouldRecursion=True) -> list:
+def get_abs_headers(repo_path, cpp_file_relative_path, include_dirs_relative_pahts, shouldRecursion=True) -> Tuple[Set[str], Set[str]]:
     cpp_file_path, include_dirs = param_process(
         repo_path, cpp_file_relative_path, include_dirs_relative_pahts)
     if shouldRecursion:
@@ -180,19 +187,22 @@ def get_abs_headers(repo_path, cpp_file_relative_path, include_dirs_relative_pah
         return find_src_include_headers(cpp_file_path, include_dirs)
 
 
-def get_relative_headers(repo_path, cpp_file_relative_path, include_dirs_relative_pahts, shouldRecursion=True) -> list:
-    headers = get_abs_headers(
+def get_relative_headers(repo_path, cpp_file_relative_path, include_dirs_relative_pahts, shouldRecursion=True) -> Tuple[list[str], list[str]]:
+    headers, unexist_headers = get_abs_headers(
         repo_path, cpp_file_relative_path, include_dirs_relative_pahts, shouldRecursion)
     headers = convert_to_relative_path(repo_path, headers)
-    return headers
+    return headers, list(unexist_headers)
 
 
-def get_relative_headers_of_files(repo_path, cpp_files, include_dirs_relative_pahts, shouldRecursion=True) -> list:
-    headers = set()
+def get_relative_headers_of_files(repo_path, cpp_files, include_dirs_relative_pahts, shouldRecursion=True) -> Tuple[list[str], list[str]]:
+    headers_set = set()
+    unexist_headers_set = set()
     for cpp_file in cpp_files:
-        headers.update(get_relative_headers(
-            repo_path, cpp_file, include_dirs_relative_pahts, shouldRecursion))
-    return list(headers)
+        headers, unexist_headers = get_relative_headers(
+            repo_path, cpp_file, include_dirs_relative_pahts, shouldRecursion)
+        headers_set.update(headers)
+        unexist_headers_set.update(unexist_headers)
+    return list(headers_set), list(unexist_headers_set)
 
 
 def extract_include_header_changes(diff_text):
@@ -220,10 +230,10 @@ def extract_include_header_changes(diff_text):
     return changes
 
 
-def get_diff_headers_of_files_all_commits(repo_path, cpp_files) -> list:
+def get_diff_headers_of_files_all_commits(repo_path, target_files) -> list:
     commits = set()
-    for cpp_file in tqdm(cpp_files, desc="Processing cpp_files", unit="file"):
-        commits.update(get_file_commits(repo_path, cpp_file))
+    for target_file in tqdm(target_files, desc="Processing target_files", unit="file"):
+        commits.update(get_file_commits(repo_path, target_file))
 
     headers = set()
 
@@ -239,18 +249,26 @@ def get_diff_headers_of_files_all_commits(repo_path, cpp_files) -> list:
 def get_relative_headers_of_files_all_commits(repo_path, cpp_files, include_dirs_relative_pahts, shouldRecursion=True, timer: Timer = None) -> list:
     timer.lap()
 
-    headers = set()
-    headers.update(get_relative_headers_of_files(
-        repo_path, cpp_files, include_dirs_relative_pahts, shouldRecursion))
-    len_before = len(headers)
+    headers_set = set()
+
+    # 获取 当前commit 下的所有相关头文件
+    headers, unexist_headers = get_relative_headers_of_files(
+        repo_path, cpp_files, include_dirs_relative_pahts, shouldRecursion)
+    headers_set.update(headers)
+    headers_set.update(unexist_headers)
+    len_before = len(headers_set)
+    print(f"headers: {len(headers)}")
+    print(f"unexist_headers: {len(unexist_headers)}")
+    print(f"headers_set: {len_before}")
     timer.lap_and_show("get_relative_headers_of_files")
 
-    headers.update(get_diff_headers_of_files_all_commits(repo_path, cpp_files))
-    len_after = len(headers)
+    # 获取 所有commit 下的所有涉及的头文件
+    headers_set.update(get_diff_headers_of_files_all_commits(repo_path, [headers, cpp_files]))
+    len_after = len(headers_set)
+    print(f"headers_set: {len_before} -> {len_after}")
     timer.lap_and_show("get_diff_headers_of_files_all_commits")
 
-    print(f"headers: {len_before} -> {len_after}")
-    return list(headers)
+    return list(headers_set)
 
 
 def demo1_recursion():
@@ -272,7 +290,7 @@ def demo1_recursion():
     cpp_file_path, include_dirs = param_process(
         repo_path, cpp_file_relative_paths[0], include_dirs_relative_pahts)
 
-    headers = get_relative_headers_of_files(
+    headers, _ = get_relative_headers_of_files(
         repo_path, cpp_file_relative_paths, include_dirs_relative_pahts)
 
     for header in headers:
@@ -305,7 +323,7 @@ def demo2_no_recursion():
     cpp_file_path, include_dirs = param_process(
         repo_path, cpp_file_relative_paths[0], include_dirs_relative_pahts)
 
-    headers = get_relative_headers_of_files(
+    headers, _ = get_relative_headers_of_files(
         repo_path, cpp_file_relative_paths, include_dirs_relative_pahts, False)
 
     for header in headers:
