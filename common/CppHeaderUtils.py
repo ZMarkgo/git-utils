@@ -230,7 +230,7 @@ def extract_include_header_changes(diff_text):
     return changes
 
 
-def get_diff_headers_of_files_all_commits(repo_path, target_files) -> list:
+def get_diff_headers_of_files_all_commits(repo_path, target_files: list) -> list:
     commits = set()
     for target_file in tqdm(target_files, desc="Processing target_files", unit="file"):
         commits.update(get_file_commits(repo_path, target_file))
@@ -263,7 +263,8 @@ def get_relative_headers_of_files_all_commits(repo_path, cpp_files, include_dirs
     timer.lap_and_show("get_relative_headers_of_files")
 
     # 获取 所有commit 下的所有涉及的头文件
-    headers_set.update(get_diff_headers_of_files_all_commits(repo_path, [headers, cpp_files]))
+    headers_set.update(get_diff_headers_of_files_all_commits(
+        repo_path, headers+cpp_files))
     len_after = len(headers_set)
     print(f"headers_set: {len_before} -> {len_after}")
     timer.lap_and_show("get_diff_headers_of_files_all_commits")
