@@ -17,31 +17,31 @@ def split_files(original_repo_path="", target_paths: list = [],
                 track_gitignore=False,
                 timer: Timer = None,
                 preserve_commit_hashes=True):
-        
+
     with Logger(tag=TAG, log_file_path=LOG_FILE_PATH) as logger:
         if timer:
             timer.lap()
         logger.info_print(get_sep("参数检查"))
         # 检查原始仓库是否存在
         if not os.path.isdir(os.path.join(original_repo_path, ".git")):
-            print(
-                f"Error: The path {original_repo_path} does not appear to be a Git repository.")
+            logger.error_print(
+                f"The path {original_repo_path} does not appear to be a Git repository.")
             sys.exit(1)
         # 检查list是否为空
         if not target_paths:
-            print("Error: The target_paths list is empty.")
+            logger.error_print("The target_paths list is empty.")
             sys.exit(1)
         # 检查新仓库名称是否为空
         if not new_repo_name:
-            print("Error: The new_repo_name is empty.")
+            logger.error_print("The new_repo_name is empty.")
             sys.exit(1)
         # 检查新仓库位置是否存在
         if not os.path.isdir(new_repo_location):
-            print(f"Error: The path {new_repo_location} does not exist.")
+            logger.error_print(f"The path {new_repo_location} does not exist.")
             sys.exit(1)
         # 检查新分支名称是否为空字符串
         if not new_branch_name:
-            print("Error: The new_branch_name is empty.")
+            logger.error_print("The new_branch_name is empty.")
             sys.exit(1)
         if timer:
             timer.lap_and_show("Check parameters")
@@ -49,8 +49,8 @@ def split_files(original_repo_path="", target_paths: list = [],
         logger.info_print(get_sep("复制仓库"))
         # 复制原始仓库到新的位置
         new_repo_path = os.path.join(new_repo_location, new_repo_name)
-        print(f"Original repo path: {original_repo_path}")
-        print(f"New repo location: {new_repo_path}")
+        logger.info_print(f"Original repo path: {original_repo_path}")
+        logger.info_print(f"New repo location: {new_repo_path}")
         copy_dir(original_repo_path, new_repo_path)
 
         if timer:
@@ -88,7 +88,7 @@ def split_files(original_repo_path="", target_paths: list = [],
         # 保留原始提交哈希，而不是生成新的提交哈希
         if preserve_commit_hashes:
             split_cmd.extend(['--preserve-commit-hashes'])
-        print(f"Target path and path-glob num: {len(added_targets_set)}")
+        logger.info_print(f"Target path and path-glob num: {len(added_targets_set)}")
         logger.info(f"Running command: {' '.join(split_cmd)}")
         subprocess.run(split_cmd, check=True)
 
@@ -124,7 +124,7 @@ def split_files(original_repo_path="", target_paths: list = [],
 
         # 创建新分支
         logger.info_print(get_sep("创建新分支"))
-        print(f"New branch name: {new_branch_name}")
+        logger.info_print(f"New branch name: {new_branch_name}")
         create_branch(new_branch_name)
 
         if timer:
