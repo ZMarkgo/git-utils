@@ -24,11 +24,7 @@ class Logger:
         info = f"[{time_str}] [{self.TAG}] {info}"
         self.log_buffer.append(info)
         if flush or len(self.log_buffer) >= self.MAX_LOG_BUFFER_SIZE or len(info) >= self.MAX_LOG_BUFFER_STR_LEN:
-            with open(self.log_file_path, 'a') as f:
-                for log in self.log_buffer:
-                    f.write(log + '\n')
-                f.write(info + '\n')
-            self.log_buffer.clear()
+            self.flush()
 
     def info_print(self, info, flush=True):
         """
@@ -48,5 +44,8 @@ class Logger:
                 f.write(log + '\n')
         self.log_buffer.clear()
 
-    def __del__(self):
+    def close(self):
+        """
+        显式关闭日志
+        """
         self.flush()
