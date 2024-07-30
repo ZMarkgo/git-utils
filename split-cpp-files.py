@@ -32,17 +32,16 @@ def main():
         #     shouldRecursion=True, timer=timer)
         # TODO 暂时从文件中读取头文件路径
         file_path = r'/home/app/repository/git-utils/split-headers-commits.log'
-        headers = []
+        headers = set()
         with open(file_path, 'r') as f:
             for line in f:
                 line = line.strip()
                 if line.endswith('.h'):
-                    headers.append(line)
-        timer.show_time_cost("Get headers")
+                    headers.add(line)
         target_paths.extend(headers)
         print(f"target file or dir num: {len(target_paths)}")
-        # for target_path in target_paths:
-        #     print(f"{target_path}")
+        timer.show_time_cost("Get headers")
+
         split_files(original_repo_path=repo_path,
                     target_paths=target_paths,
                     new_repo_name=new_repo_name,
