@@ -38,3 +38,15 @@ class Logger:
         """
         print(info, flush=flush)
         self.info(info, flush)
+
+    def flush(self):
+        """
+        强制写入文件
+        """
+        with open(self.log_file_path, 'a') as f:
+            for log in self.log_buffer:
+                f.write(log + '\n')
+        self.log_buffer.clear()
+
+    def __del__(self):
+        self.flush()
