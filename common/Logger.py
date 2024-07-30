@@ -44,8 +44,18 @@ class Logger:
                 f.write(log + '\n')
         self.log_buffer.clear()
 
-    def close(self):
+    def __enter__(self):
         """
-        显式关闭日志
+        进入上下文管理器
+        """
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        """
+        退出上下文管理器
         """
         self.flush()
+        # 可以处理异常
+        if exc_type is not None:
+            print(f"Exception occurred: {exc_value}")
+        return True  # 如果要抑制异常，返回 True，否则返回 False

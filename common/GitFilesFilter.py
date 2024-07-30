@@ -6,7 +6,9 @@ from common.TimeUtils import Timer
 from common.PrintUtils import print_sep
 from common.Logger import Logger
 
-LOG_FILE_PATH = "./logs/split.log"
+CURRENT_FILE_NAME = __file__.split('/')[-1]
+TAG = CURRENT_FILE_NAME
+LOG_FILE_PATH = os.path.abspath(f"./logs/{CURRENT_FILE_NAME}.log")
 
 
 def split_files(original_repo_path="", target_paths: list = [],
@@ -14,7 +16,8 @@ def split_files(original_repo_path="", target_paths: list = [],
                 track_gitignore=False,
                 timer: Timer = None,
                 preserve_commit_hashes=True):
-    with Logger(tag=__file__.split('/')[-1], log_file_path=LOG_FILE_PATH) as logger:
+        
+    with Logger(tag=TAG, log_file_path=LOG_FILE_PATH) as logger:
         if timer:
             timer.lap()
         print_sep("参数检查")
@@ -47,7 +50,7 @@ def split_files(original_repo_path="", target_paths: list = [],
         new_repo_path = os.path.join(new_repo_location, new_repo_name)
         print(f"Original repo path: {original_repo_path}")
         print(f"New repo location: {new_repo_path}")
-        copy_dir(original_repo_path, new_repo_path)
+        # copy_dir(original_repo_path, new_repo_path)
 
         if timer:
             timer.lap_and_show("Copy repo")
