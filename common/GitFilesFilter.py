@@ -58,16 +58,22 @@ def split_files(original_repo_path="", target_paths: list = [],
     os.chdir(new_repo_path)
     # 使用 git filter-repo 提取指定文件的历史记录
     split_cmd = ['git', 'filter-repo']
+    added_targets_set = set()
     for target_file in target_paths:
         target_file = target_file.replace('\\', '/')
-        # 如果 target_file 路径中不包含 ..
-        if '..' not in target_file:
-            split_cmd.extend(['--path', target_file])
+        # 提取文件名
+        target_file_name = target_file.split('/')[-1]
+        # 已经添加过，跳过
+        if target_file_name in added_targets_set:
+            continue
+        # 如果 target_file 路径中包含 .. 使用文件名，否则使用文件路径
+        if '..' in target_file:
+            target = target_file_name
         else:
-            # 提取文件名
-            target_file_name = target_file.split('/')[-1]
-            split_cmd.extend(['--path', target_file_name])
-            split_cmd.extend(['--path-glob', f'*/{target_file_name}'])
+            target = target_file
+        split_cmd.extend(['--path', target])
+        split_cmd.extend(['--path-glob', f'*/{target}'])
+        added_targets_set.add(target_file_name)
     if track_gitignore:
         # 保留所有 gitignore 文件
         gitignore_files = list_gitignore_files(new_repo_path)
@@ -76,7 +82,8 @@ def split_files(original_repo_path="", target_paths: list = [],
     # 保留原始提交哈希，而不是生成新的提交哈希
     if preserve_commit_hashes:
         split_cmd.extend(['--preserve-commit-hashes'])
-    print(f"Running command: {' '.join(split_cmd)}")
+    print(f"Target path and path-glob num: {len(added_targets_set)}")
+    # logger.info(f"Running command: {' '.join(split_cmd)}")
     subprocess.run(split_cmd, check=True)
 
     if timer:
