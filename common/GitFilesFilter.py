@@ -88,6 +88,7 @@ def split_files(original_repo_path="", target_paths: list = [],
         # 保留原始提交哈希，而不是生成新的提交哈希
         if preserve_commit_hashes:
             split_cmd.extend(['--preserve-commit-hashes'])
+        split_cmd.extend(['--force'])
         logger.info_print(f"Target path and path-glob num: {len(added_targets_set)}")
         logger.info(f"Running command: {' '.join(split_cmd)}")
         subprocess.run(split_cmd, check=True)
