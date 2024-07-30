@@ -31,3 +31,16 @@ def show_count_file_ext(repo_path=".", file_extension=".c"):
     """
     count = count_file_ext(repo_path, file_extension)
     print(f'Count of {file_extension} files: {count}')
+
+
+def remove_prefix_slash_and_dot(path: str):
+    """
+    递归删除前置 '/' 和 './'
+    :param path: 路径
+    :return: 删除前置 '/' 和 './' 后的路径
+    """
+    if path.startswith('/'):
+        return remove_prefix_slash_and_dot(path[1:])
+    if path.startswith('./'):
+        return remove_prefix_slash_and_dot(path[2:])
+    return path
