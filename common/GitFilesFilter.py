@@ -4,6 +4,11 @@ import subprocess
 from common.GitUtils import copy_dir, remove_dir, list_gitignore_files, get_repo_size_info, print_repo_size_change_info, remove_all_git_remotes, add_virtual_remote, create_branch, show_commit_count, show_earliest_commit_time
 from common.TimeUtils import Timer
 from common.PrintUtils import print_sep
+from common.Logger import Logger
+
+LOG_FILE_PATH = "./logs/split.log"
+
+logger = Logger(tag=__file__.split('/')[-1], log_file_path=LOG_FILE_PATH)
 
 
 def split_files(original_repo_path="", target_paths: list = [],
