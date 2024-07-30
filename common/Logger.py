@@ -15,6 +15,11 @@ class Logger:
             f.write("")
 
     def info(self, info, flush=True):
+        """
+        记录日志，输出到文件中
+        :param info: 日志信息
+        :param flush: 是否立即写入文件
+        """
         time_str = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         info = f"[{time_str}] [{self.TAG}] {info}"
         self.log_buffer.append(info)
@@ -24,3 +29,12 @@ class Logger:
                     f.write(log + '\n')
                 f.write(info + '\n')
             self.log_buffer.clear()
+
+    def info_print(self, info, flush=True):
+        """
+        标准输出，并记录日志
+        :param info: 日志信息
+        :param flush: 是否立即输出
+        """
+        print(info, flush=flush)
+        self.info(info, flush)
