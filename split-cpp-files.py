@@ -5,7 +5,7 @@ from common.CppHeaderUtils import get_relative_headers_of_files, get_relative_he
 
 def main():
     timer = Timer()
-    repo_path = r'/mnt/d/coding/zhurong-CodeWisdom/test_codes/linux'
+    repo_path = r'/home/app/repository/linux'
     # TODO 不同的提取可能需要不同的头文件路径
     include_dirs_relative_pahts = [
         './arch/x86/include',
@@ -19,9 +19,9 @@ def main():
         './include/linux/kconfig.h',
         './include/linux/compiler_types.h'
     ]
-    target_paths = ['mm/memory-failure.c']
-    new_repo_name = 'linux-split-memory-failure-careful-headers-all-commits'
-    new_repo_location = r"/mnt/d/coding/zhurong-CodeWisdom/test_codes"
+    target_paths = ['linux/sysctl.h']
+    new_repo_name = 'linux-split-sysctl-h-test'
+    new_repo_location = r"/home/app/repository"
     new_branch_name = 'demo'
     track_gitignore = False
 
@@ -33,6 +33,8 @@ def main():
         timer.show_time_cost("Get headers")
         target_paths.extend(headers)
         print(f"target file or dir num: {len(target_paths)}")
+        # for target_path in target_paths:
+        #     print(f"{target_path}")
         split_files(original_repo_path=repo_path,
                     target_paths=target_paths,
                     new_repo_name=new_repo_name,

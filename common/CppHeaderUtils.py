@@ -213,7 +213,9 @@ def extract_include_header_changes(diff_text):
         elif in_diff and (line.startswith('+') or line.startswith('-')):
             include_match = include_pattern.search(line)
             if include_match:
-                changes.append(include_match)
+                # 只提取头文件名部分
+                header_file = include_match.group(1)
+                changes.append(header_file)
 
     return changes
 
@@ -228,8 +230,8 @@ def get_diff_headers_of_files_all_commits(repo_path, cpp_files) -> list:
     # 使用tqdm显示进度条
     for commit in tqdm(commits, desc="Processing commits", unit="commit"):
         diff_text = get_commit_diff(repo_path, commit)
-        include_changes = extract_include_header_changes(diff_text)
-        headers.update(include_changes)
+        include_header_changes = extract_include_header_changes(diff_text)
+        headers.update(include_header_changes)
 
     return list(headers)
 
