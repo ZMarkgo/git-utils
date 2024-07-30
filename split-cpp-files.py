@@ -38,6 +38,7 @@ def main():
                 line = line.strip()
                 if line.endswith('.h'):
                     headers.add(line)
+
         target_paths.extend(headers)
         print(f"target file or dir num: {len(target_paths)}")
         timer.show_time_cost("Get headers")
