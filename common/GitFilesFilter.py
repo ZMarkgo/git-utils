@@ -9,7 +9,8 @@ from common.PrintUtils import print_sep
 def split_files(original_repo_path="", target_paths: list = [],
                 new_repo_name="", new_repo_location="", new_branch_name="",
                 track_gitignore=False,
-                timer: Timer = None):
+                timer: Timer = None,
+                preserve_commit_hashes=True):
     if timer:
         timer.lap()
     print_sep("参数检查")
@@ -60,6 +61,9 @@ def split_files(original_repo_path="", target_paths: list = [],
         gitignore_files = list_gitignore_files(new_repo_path)
         for gitignore_file in gitignore_files:
             split_cmd.extend(['--path', gitignore_file])
+    # 保留原始提交哈希，而不是生成新的提交哈希
+    if preserve_commit_hashes:
+        split_cmd.extend(['--preserve-commit-hashes'])
     split_cmd.extend(['--force'])
     subprocess.run(split_cmd, check=True)
 
