@@ -2,38 +2,107 @@ import os
 import time
 
 
+class LogBuffer:
+    def __init__(self, max_log_buffer_size=100, max_log_buffer_str_len=1000):
+        self.log_buffer = []
+        self.log_buffer_str_len = 0
+        self.MAX_LOG_BUFFER_SIZE = max_log_buffer_size
+        self.MAX_LOG_BUFFER_STR_LEN = max_log_buffer_str_len
+
+    def append(self, msg):
+        self.log_buffer.append(msg)
+        self.log_buffer_str_len += len(msg)
+
+    def is_full(self):
+        return len(self.log_buffer) >= self.MAX_LOG_BUFFER_SIZE or self.log_buffer_str_len >= self.MAX_LOG_BUFFER_STR_LEN
+
+    def clear(self):
+        self.log_buffer.clear()
+        self.log_buffer_str_len = 0
+
+    def __len__(self):
+        return len(self.log_buffer)
+
+    def __iter__(self):
+        return iter(self.log_buffer)
+
+
 class Logger:
     def __init__(self, tag='', log_file_path='./logs/log.log', max_log_buffer_size=100, max_log_buffer_str_len=1000):
         self.TAG = tag
         self.log_file_path = log_file_path
-        self.log_buffer = []
-        self.MAX_LOG_BUFFER_SIZE = max_log_buffer_size
-        self.MAX_LOG_BUFFER_STR_LEN = max_log_buffer_str_len
+        self.log_buffer = LogBuffer(
+            max_log_buffer_size, max_log_buffer_str_len)
+
         if not os.path.exists(os.path.dirname(self.log_file_path)):
             os.makedirs(os.path.dirname(self.log_file_path))
         with open(self.log_file_path, 'w') as f:
             f.write("")
 
-    def info(self, info, flush=True):
+    def format_info(self, info):
+        return f"{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())} [{self.TAG}] INFO {info}"
+
+    def format_warning(self, warning):
+        return f"{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())} [{self.TAG}] WARNING {warning}"
+
+    def format_error(self, error):
+        return f"{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())} [{self.TAG}] ERROR {error}"
+
+    def log_msg(self, msg, flush=True):
+        self.log_buffer.append(msg)
+        if flush or self.log_buffer.is_full():
+            self.flush()
+
+    def info(self, msg, flush=True):
         """
         记录日志，输出到文件中
         :param info: 日志信息
         :param flush: 是否立即写入文件
         """
-        time_str = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-        info = f"[{time_str}] [{self.TAG}] {info}"
-        self.log_buffer.append(info)
-        if flush or len(self.log_buffer) >= self.MAX_LOG_BUFFER_SIZE or len(info) >= self.MAX_LOG_BUFFER_STR_LEN:
-            self.flush()
+        self.log_msg(self.format_info(msg), flush)
 
-    def info_print(self, info, flush=True):
+    def warning(self, msg, flush=True):
+        """
+        记录警告，输出到文件中
+        :param warning: 警告信息
+        :param flush: 是否立即写入文件
+        """
+        self.log_msg(self.format_warning(msg), flush)
+
+    def error(self, msg, flush=True):
+        """
+        记录错误，输出到文件中
+        :param error: 错误信息
+        :param flush: 是否立即写入文件
+        """
+        self.log_msg(self.format_error(msg), flush)
+
+    def info_print(self, msg, flush=True):
         """
         标准输出，并记录日志
         :param info: 日志信息
         :param flush: 是否立即输出
         """
-        print(info, flush=flush)
-        self.info(info, flush)
+        print(msg, flush=flush)
+        self.info(msg, flush)
+
+    def warning_print(self, msg, flush=True):
+        """
+        标准输出警告，并记录日志
+        :param warning: 警告信息
+        :param flush: 是否立即输出
+        """
+        print(msg, flush=flush)
+        self.warning(msg, flush)
+
+    def error_print(self, msg, flush=True):
+        """
+        标准输出错误，并记录日志
+        :param error: 错误信息
+        :param flush: 是否立即输出
+        """
+        print(msg, flush=flush)
+        self.error(msg, flush)
 
     def flush(self):
         """
