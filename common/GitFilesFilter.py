@@ -1,7 +1,7 @@
 import os
 import sys
 import subprocess
-from common.GitUtils import copy_dir, remove_dir, list_gitignore_files, show_repo_size_info, remove_all_git_remotes, add_virtual_remote, create_branch, show_commit_count, show_earliest_commit_time
+from common.GitUtils import copy_dir, remove_dir, list_gitignore_files, get_repo_size_info, print_repo_size_change_info, remove_all_git_remotes, add_virtual_remote, create_branch, show_commit_count, show_earliest_commit_time
 from common.TimeUtils import Timer
 from common.PrintUtils import print_sep
 
@@ -45,17 +45,23 @@ def split_files(original_repo_path="", target_paths: list = [],
     print(f"New repo location: {new_repo_path}")
     copy_dir(original_repo_path, new_repo_path)
 
-    # 切换到仓库
-    os.chdir(new_repo_path)
-
     if timer:
         timer.lap_and_show("Copy repo")
 
     print_sep("提取文件及其历史")
+    # 切换到仓库
+    os.chdir(new_repo_path)
     # 使用 git filter-repo 提取指定文件的历史记录
     split_cmd = ['git', 'filter-repo']
     for target_file in target_paths:
+        target_file = target_file.replace('\\', '/')
+        # 去掉开头的 './'
+        if target_file.startswith('./'):
+            target_file = target_file[2:]
         split_cmd.extend(['--path', target_file])
+        # 如果不是绝对路径，添加 '*/'
+        if not target_file.startswith('/'):
+            split_cmd.extend(['--path-glob', f'*/{target_file}'])
     if track_gitignore:
         # 保留所有 gitignore 文件
         gitignore_files = list_gitignore_files(new_repo_path)
@@ -64,7 +70,7 @@ def split_files(original_repo_path="", target_paths: list = [],
     # 保留原始提交哈希，而不是生成新的提交哈希
     if preserve_commit_hashes:
         split_cmd.extend(['--preserve-commit-hashes'])
-    split_cmd.extend(['--force'])
+    print(f"Running command: {' '.join(split_cmd)}")
     subprocess.run(split_cmd, check=True)
 
     if timer:
@@ -72,8 +78,7 @@ def split_files(original_repo_path="", target_paths: list = [],
 
     # 仓库瘦身
     print_sep("仓库瘦身")
-    print("Before:")
-    show_repo_size_info()
+    repo_size_before = get_repo_size_info()
     # 移除 filter-repo 残留数据
     remove_dir('.git/filter-repo')
     # 清理未使用的对象
@@ -81,8 +86,8 @@ def split_files(original_repo_path="", target_paths: list = [],
     subprocess.run(['git', 'reflog', 'expire',
                    '--expire=now', '--all'], check=True)
     subprocess.run(['git', 'gc', '--prune=now', '--aggressive'], check=True)
-    print("After:")
-    show_repo_size_info()
+    repo_size_after = get_repo_size_info()
+    print_repo_size_change_info(repo_size_before, repo_size_after)
 
     if timer:
         timer.lap_and_show("Slim repo")

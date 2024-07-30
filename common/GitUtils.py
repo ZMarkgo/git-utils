@@ -288,17 +288,66 @@ def get_commit_diff(repo_path, commit_hash):
         return None
 
 
-def get_repo_size():
+class RepoSizeInfo:
+    """
+    size: 0
+    in-pack: 65
+    packs: 1
+    size-pack: 9
+    prune-packable: 0
+    garbage: 0
+    size-garbage: 0
+    """
+
+    def __init__(self, size, in_pack, packs, size_pack, prune_packable, garbage, size_garbage):
+        self.size = size
+        self.in_pack = in_pack
+        self.packs = packs
+        self.size_pack = size_pack
+        self.prune_packable = prune_packable
+        self.garbage = garbage
+        self.size_garbage = size_garbage
+
+    def __str__(self):
+        return f"size: {self.size}\n" \
+               f"in-pack: {self.in_pack}\n" \
+               f"packs: {self.packs}\n" \
+               f"size-pack: {self.size_pack}\n" \
+               f"prune-packable: {self.prune_packable}\n" \
+               f"garbage: {self.garbage}\n" \
+               f"size-garbage: {self.size_garbage}"
+
+
+def print_repo_size_change_info(before: RepoSizeInfo, after: RepoSizeInfo):
+    print(f"size: {before.size} -> {after.size}\n"
+          f"in-pack: {before.in_pack} -> {after.in_pack}\n"
+          f"packs: {before.packs} -> {after.packs}\n"
+          f"size-pack: {before.size_pack} -> {after.size_pack}\n"
+          f"prune-packable: {before.prune_packable} -> {after.prune_packable}\n"
+          f"garbage: {before.garbage} -> {after.garbage}\n"
+          f"size-garbage: {before.size_garbage} -> {after.size_garbage}")
+
+
+def get_repo_size_info() -> RepoSizeInfo:
     """
     获取仓库的大小信息 git count-objects -v
     """
     result = subprocess.run(
         ['git', 'count-objects', '-v'], stdout=subprocess.PIPE)
-    return result.stdout.decode('utf-8')
+    repo_size = result.stdout.decode('utf-8').split('\n')
+    # 提取信息
+    size = int(repo_size[0].split(': ')[1])
+    in_pack = int(repo_size[1].split(': ')[1])
+    packs = int(repo_size[2].split(': ')[1])
+    size_pack = int(repo_size[3].split(': ')[1])
+    prune_packable = int(repo_size[4].split(': ')[1])
+    garbage = int(repo_size[5].split(': ')[1])
+    size_garbage = int(repo_size[6].split(': ')[1])
+    return RepoSizeInfo(size, in_pack, packs, size_pack, prune_packable, garbage, size_garbage)
 
 
 def show_repo_size_info():
-    repo_size = get_repo_size()
+    repo_size = get_repo_size_info()
     print(repo_size)
 
 
