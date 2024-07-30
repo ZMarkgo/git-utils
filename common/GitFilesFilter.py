@@ -5,6 +5,7 @@ from common.GitUtils import copy_dir, remove_dir, list_gitignore_files, get_repo
 from common.TimeUtils import Timer
 from common.PrintUtils import print_sep
 from common.Logger import Logger
+from common.FileUtils import remove_prefix_slash_and_dot
 
 CURRENT_FILE_NAME = __file__.split('/')[-1]
 TAG = CURRENT_FILE_NAME
@@ -62,7 +63,10 @@ def split_files(original_repo_path="", target_paths: list = [],
         split_cmd = ['git', 'filter-repo']
         added_targets_set = set()
         for target_file in target_paths:
+            # 处理路径分隔符
             target_file = target_file.replace('\\', '/')
+            # 递归删除前置 '/' 和 './'
+            target_file = remove_prefix_slash_and_dot(target_file)
             # 提取文件名
             target_file_name = target_file.split('/')[-1]
             # 已经添加过，跳过
