@@ -55,13 +55,14 @@ def split_files(original_repo_path="", target_paths: list = [],
     split_cmd = ['git', 'filter-repo']
     for target_file in target_paths:
         target_file = target_file.replace('\\', '/')
-        # 去掉开头的 './'
-        if target_file.startswith('./'):
-            target_file = target_file[2:]
-        split_cmd.extend(['--path', target_file])
-        # 如果不是绝对路径，添加 '*/'
-        if not target_file.startswith('/'):
-            split_cmd.extend(['--path-glob', f'*/{target_file}'])
+        # 如果 target_file 路径中不包含 ..
+        if '..' not in target_file:
+            split_cmd.extend(['--path', target_file])
+        else:
+            # 提取文件名
+            target_file_name = target_file.split('/')[-1]
+            split_cmd.extend(['--path', target_file_name])
+            split_cmd.extend(['--path-glob', f'*/{target_file_name}'])
     if track_gitignore:
         # 保留所有 gitignore 文件
         gitignore_files = list_gitignore_files(new_repo_path)
