@@ -26,7 +26,7 @@ if __name__ == '__main__':
 
     print_sep('count commits of target files')
     timer.lap()
-    cpp_file_relative_paths = ['mm/memory-failure.c']
+    cpp_file_relative_paths = ['mm/memory.c']
     show_count_files_commits(repo_path, cpp_file_relative_paths)
     timer.lap_and_show('Counting commits of target files')
 
