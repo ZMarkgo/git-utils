@@ -16,7 +16,8 @@ def split_files(original_repo_path="", target_paths: list = [],
                 new_repo_name="", new_repo_location="", new_branch_name="",
                 track_gitignore=False,
                 timer: Timer = None,
-                preserve_commit_hashes=True):
+                preserve_commit_hashes=True,
+                regex_with_glob=False):
 
     with Logger(tag=TAG, log_file_path=LOG_FILE_PATH) as logger:
         if timer:
@@ -78,7 +79,8 @@ def split_files(original_repo_path="", target_paths: list = [],
             else:
                 target = target_file
             split_cmd.extend(['--path', target])
-            split_cmd.extend(['--path-glob', f'*/{target}'])
+            if regex_with_glob:
+                split_cmd.extend(['--path-glob', f'*/{target}'])
             added_targets_set.add(target_file_name)
         if track_gitignore:
             # 保留所有 gitignore 文件
