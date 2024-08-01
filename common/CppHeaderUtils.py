@@ -247,7 +247,8 @@ def get_diff_headers_of_files_all_commits(repo_path, target_files: list) -> list
 
 
 def get_relative_headers_of_files_all_commits(repo_path, cpp_files, include_dirs_relative_pahts, shouldRecursion=True, timer: Timer = None) -> list:
-    timer.lap()
+    if timer:
+        timer.lap()
 
     headers_set = set()
 
@@ -260,14 +261,16 @@ def get_relative_headers_of_files_all_commits(repo_path, cpp_files, include_dirs
     print(f"headers: {len(headers)}")
     print(f"unexist_headers: {len(unexist_headers)}")
     print(f"headers_set: {len_before}")
-    timer.lap_and_show("get_relative_headers_of_files")
+    if timer:
+        timer.lap_and_show("get_relative_headers_of_files")
 
     # 获取 所有commit 下的所有涉及的头文件
     headers_set.update(get_diff_headers_of_files_all_commits(
-        repo_path, headers+cpp_files))
+        repo_path, cpp_files))
     len_after = len(headers_set)
     print(f"headers_set: {len_before} -> {len_after}")
-    timer.lap_and_show("get_diff_headers_of_files_all_commits")
+    if timer:
+        timer.lap_and_show("get_diff_headers_of_files_all_commits")
 
     return list(headers_set)
 
