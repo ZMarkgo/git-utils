@@ -19,11 +19,11 @@ def main():
         './include/linux/kconfig.h',
         './include/linux/compiler_types.h'
     ]
-    target_paths = ['mm/memory.c']
-    new_repo_name = 'linux-split-memory-careful-headers'
+    target_paths = ['mm/memory-failure.c']
+    new_repo_name = 'linux-split-memory-failure-careful-headers-generated-traced'
     new_repo_location = r"/home/app/repository"
     new_branch_name = 'demo'
-    track_gitignore = False
+    track_gitignore = True
 
     try:
         timer.lap()
