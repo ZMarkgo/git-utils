@@ -62,6 +62,7 @@ def split_files(original_repo_path="", target_paths: list = [],
         os.chdir(new_repo_path)
         # 使用 git filter-repo 提取指定文件的历史记录
         split_cmd = ['git', 'filter-repo']
+        target_num=0
         added_targets_set = set()
         for target_file in target_paths:
             # 处理路径分隔符
@@ -79,19 +80,22 @@ def split_files(original_repo_path="", target_paths: list = [],
             else:
                 target = target_file
             split_cmd.extend(['--path', target])
+            target_num+=1
             if regex_with_glob:
                 split_cmd.extend(['--path-glob', f'*/{target}'])
+                target_num+=1
             added_targets_set.add(target_file_name)
         if track_gitignore:
             # 保留所有 gitignore 文件
             gitignore_files = list_gitignore_files(new_repo_path)
             for gitignore_file in gitignore_files:
                 split_cmd.extend(['--path', gitignore_file])
+                target_num+=1
         # 保留原始提交哈希，而不是生成新的提交哈希
         if preserve_commit_hashes:
             split_cmd.extend(['--preserve-commit-hashes'])
         split_cmd.extend(['--force'])
-        logger.info_print(f"Target path and path-glob num: {len(added_targets_set)}")
+        logger.info_print(f"Target path and path-glob num: {len(target_num)}")
         logger.info(f"Running command: {' '.join(split_cmd)}")
         subprocess.run(split_cmd, check=True)
 
