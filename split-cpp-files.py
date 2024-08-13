@@ -22,7 +22,7 @@ def main():
     ]
     target_paths = ['mm/memory-failure.c']
     target_c_files = target_paths.copy()
-    new_repo_name = 'linux-split-memory-failure-careful-headers-all-gitignore-2'
+    new_repo_name = 'linux-split-memory-failure-careful-headers-all-gitignore-3'
     new_repo_location = r"/home/app/repository"
     new_branch_name = 'demo'
     track_gitignore = True
@@ -47,14 +47,19 @@ def main():
                     track_gitignore=track_gitignore,
                     timer=timer,
                     regex_with_glob=False)
-
-        statistics_split_info(repo_path, target_c_files, timer=timer)
     except Exception as e:
         print(f"Error: {e}")
         traceback.print_exc()
+    finally:
+        timer.end()
+        timer.show_time_cost()
 
-    timer.end()
-    timer.show_time_cost()
+    try:
+        new_repo_path = f"{new_repo_location}/{new_repo_name}"
+        statistics_split_info(new_repo_path, target_c_files, timer=Timer())
+    except Exception as e:
+        print(f"Error: {e}")
+        traceback.print_exc()
 
 
 if __name__ == "__main__":
