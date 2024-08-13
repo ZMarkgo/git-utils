@@ -75,20 +75,21 @@ def split_files(original_repo_path="", target_paths: list = [],
             target_file = remove_prefix_slash_and_dot(target_file)
             # 提取文件名
             target_file_name = target_file.split('/')[-1]
-            # 已经添加过，跳过
-            if target_file_name in added_targets_set:
-                continue
-            # 如果 target_file 路径中包含 .. 使用文件名，否则使用文件路径
+            # 如果 target_file 路径中包含 .. 则使用文件名，否则使用文件路径
             if '..' in target_file:
                 target = target_file_name
             else:
                 target = target_file
-            split_cmd.extend(['--path', target])
-            target_num += 1
-            if regex_with_glob:
-                split_cmd.extend(['--path-glob', f'*/{target}'])
+            if target in added_targets_set:
+                continue
+            if not regex_with_glob:
+                split_cmd.extend(['--path', target])
                 target_num += 1
-            added_targets_set.add(target_file_name)
+            else:
+                split_cmd.extend(['--path', target])
+                split_cmd.extend(['--path-glob', f'*/{target}'])
+                target_num += 2
+            added_targets_set.add(target)
         if track_gitignore:
             # 保留所有 gitignore 文件
             gitignore_files = list_gitignore_files(new_repo_path)
