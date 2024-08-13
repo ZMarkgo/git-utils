@@ -2,10 +2,11 @@ import os
 import sys
 import subprocess
 from common.GitUtils import copy_dir, remove_dir, list_gitignore_files, get_repo_size_info, get_repo_size_change_info, remove_all_git_remotes, add_virtual_remote, create_branch, show_commit_count, show_earliest_commit_time
+from common.GitUtils import show_commit_count, show_count_files_commits, show_earliest_commit_time
 from common.TimeUtils import Timer
-from common.PrintUtils import get_sep
+from common.PrintUtils import get_sep, print_sep
 from common.Logger import Logger
-from common.FileUtils import remove_prefix_slash_and_dot
+from common.FileUtils import remove_prefix_slash_and_dot, show_count_file_ext
 import time
 
 CURRENT_FILE_NAME = __file__.split('/')[-1]
@@ -145,3 +146,33 @@ def split_files(original_repo_path="", target_paths: list = [],
         show_commit_count()
         # 展示最早的提交时间
         show_earliest_commit_time()
+
+
+def statistics_split_info(repo_path, cpp_file_relative_paths, timer: Timer = None):
+    if not timer:
+        timer = Timer()
+    else:
+        timer.lap()
+    print_sep('count files')
+    timer.lap()
+    show_count_file_ext(repo_path, '.c')
+    show_count_file_ext(repo_path, '.h')
+    timer.lap_and_show('Counting .c and .h files')
+
+    print_sep('count all commits')
+    timer.lap()
+    show_commit_count(repo_path)
+    timer.lap_and_show('Counting all commits')
+
+    print_sep('count commits of target files')
+    timer.lap()
+    show_count_files_commits(repo_path, cpp_file_relative_paths)
+    timer.lap_and_show('Counting commits of target files')
+
+    print_sep('show earliest commit time')
+    timer.lap()
+    show_earliest_commit_time(repo_path)
+    timer.lap_and_show('Showing earliest commit time')
+
+    timer.end()
+    timer.show_time_cost()
