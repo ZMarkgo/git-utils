@@ -55,7 +55,7 @@ def split_files(original_repo_path="", target_paths: list = [],
         new_repo_path = os.path.join(new_repo_location, new_repo_name)
         logger.info_print(f"Original repo path: {original_repo_path}")
         logger.info_print(f"New repo location: {new_repo_path}")
-        # copy_dir(original_repo_path, new_repo_path)
+        copy_dir(original_repo_path, new_repo_path)
 
         if timer:
             timer.lap_and_show("Copy repo")
