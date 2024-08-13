@@ -36,7 +36,7 @@ class Logger:
 
         if not os.path.exists(os.path.dirname(self.log_file_path)):
             os.makedirs(os.path.dirname(self.log_file_path))
-        with open(self.log_file_path, 'w') as f:
+        with open(self.log_file_path, 'a') as f:
             f.write("")
 
     def format_info(self, info):
