@@ -6,10 +6,13 @@ from common.TimeUtils import Timer
 from common.PrintUtils import get_sep
 from common.Logger import Logger
 from common.FileUtils import remove_prefix_slash_and_dot
+import time
 
 CURRENT_FILE_NAME = __file__.split('/')[-1]
 TAG = CURRENT_FILE_NAME
-LOG_FILE_PATH = os.path.abspath(f"./logs/{CURRENT_FILE_NAME}.log")
+# 当前日期
+DATE_NOW = time.strftime("%Y-%m-%d", time.localtime())
+LOG_FILE_PATH = os.path.abspath(f"./logs/{CURRENT_FILE_NAME}-{DATE_NOW}.log")
 
 
 def split_files(original_repo_path="", target_paths: list = [],
@@ -62,7 +65,7 @@ def split_files(original_repo_path="", target_paths: list = [],
         os.chdir(new_repo_path)
         # 使用 git filter-repo 提取指定文件的历史记录
         split_cmd = ['git', 'filter-repo']
-        target_num=0
+        target_num = 0
         added_targets_set = set()
         for target_file in target_paths:
             # 处理路径分隔符
@@ -80,17 +83,17 @@ def split_files(original_repo_path="", target_paths: list = [],
             else:
                 target = target_file
             split_cmd.extend(['--path', target])
-            target_num+=1
+            target_num += 1
             if regex_with_glob:
                 split_cmd.extend(['--path-glob', f'*/{target}'])
-                target_num+=1
+                target_num += 1
             added_targets_set.add(target_file_name)
         if track_gitignore:
             # 保留所有 gitignore 文件
             gitignore_files = list_gitignore_files(new_repo_path)
             for gitignore_file in gitignore_files:
                 split_cmd.extend(['--path', gitignore_file])
-                target_num+=1
+                target_num += 1
         # 保留原始提交哈希，而不是生成新的提交哈希
         if preserve_commit_hashes:
             split_cmd.extend(['--preserve-commit-hashes'])
