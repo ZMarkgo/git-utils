@@ -99,6 +99,8 @@ def split_files(original_repo_path="", target_paths: list = [],
             for gitignore_file in gitignore_files:
                 split_cmd.extend(['--path', gitignore_file])
                 target_num += 1
+            logger.info_print(f"Target .gitignore file num: {len(gitignore_files)}")
+            logger.info(f"Target .gitignore files: {gitignore_files}")
         # 保留原始提交哈希，而不是生成新的提交哈希
         if preserve_commit_hashes:
             split_cmd.extend(['--preserve-commit-hashes'])
