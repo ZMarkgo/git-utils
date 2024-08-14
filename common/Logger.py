@@ -1,6 +1,10 @@
 import os
 import time
 
+DEFAULT_LOG_FILE_PATH = './logs/log.log'
+# 默认时间格式，用于日志记录，带有年月日时分秒毫秒
+DEFAULT_TIME_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
+
 
 class LogBuffer:
     def __init__(self, max_log_buffer_size=100, max_log_buffer_str_len=1000):
@@ -28,54 +32,68 @@ class LogBuffer:
 
 
 class Logger:
-    def __init__(self, tag='', log_file_path='./logs/log.log', max_log_buffer_size=100, max_log_buffer_str_len=1000):
+    def __init__(self, tag='', log_file_path='./logs/log.log',
+                 time_format=DEFAULT_TIME_FORMAT,
+                 max_log_buffer_size=100, max_log_buffer_str_len=1000):
         self.TAG = tag
         self.log_file_path = log_file_path
+        self.time_format = time_format
         self.log_buffer = LogBuffer(
             max_log_buffer_size, max_log_buffer_str_len)
 
         if not os.path.exists(os.path.dirname(self.log_file_path)):
             os.makedirs(os.path.dirname(self.log_file_path))
-        with open(self.log_file_path, 'a') as f:
-            f.write("")
+        if not os.path.exists(self.log_file_path):
+            os.mknod(self.log_file_path)
 
     def format_info(self, info):
-        return f"{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())} [{self.TAG}] INFO {info}"
+        return f"{time.strftime(self.time_format, time.localtime())} [{self.TAG}] INFO {info}"
 
     def format_warning(self, warning):
-        return f"{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())} [{self.TAG}] WARNING {warning}"
+        return f"{time.strftime(self.time_format, time.localtime())} [{self.TAG}] WARNING {warning}"
 
     def format_error(self, error):
-        return f"{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())} [{self.TAG}] ERROR {error}"
+        return f"{time.strftime(self.time_format, time.localtime())} [{self.TAG}] ERROR {error}"
 
-    def log_msg(self, msg, flush=True):
+    def log_msg(self, msg, flush=True, stdout=False):
+        """
+        记录一条日志到日志文件
+        :param msg: 日志信息
+        :param flush: 是否立即写入文件
+        :param stdout: 是否输出到标准输出
+        """
         self.log_buffer.append(msg)
         if flush or self.log_buffer.is_full():
             self.flush()
+        if stdout:
+            print(msg, flush=True)
 
-    def info(self, msg, flush=True):
+    def info(self, msg, flush=True, stdout=False):
         """
-        记录日志，输出到文件中
+        记录info级别, 格式化的msg日志, 到日志文件
         :param info: 日志信息
         :param flush: 是否立即写入文件
+        :param stdout: 是否输出到标准输出
         """
-        self.log_msg(self.format_info(msg), flush)
+        self.log_msg(self.format_info(msg), flush, stdout)
 
-    def warning(self, msg, flush=True):
+    def warning(self, msg, flush=True, stdout=False):
         """
-        记录警告，输出到文件中
+        记录warning级别, 格式化的msg日志, 到日志文件
         :param warning: 警告信息
         :param flush: 是否立即写入文件
+        :param stdout: 是否输出到标准输出
         """
-        self.log_msg(self.format_warning(msg), flush)
+        self.log_msg(self.format_warning(msg), flush, stdout)
 
-    def error(self, msg, flush=True):
+    def error(self, msg, flush=True, stdout=False):
         """
-        记录错误，输出到文件中
+        记录error级别, 格式化的msg日志, 到日志文件
         :param error: 错误信息
         :param flush: 是否立即写入文件
+        :param stdout: 是否输出到标准输出
         """
-        self.log_msg(self.format_error(msg), flush)
+        self.log_msg(self.format_error(msg), flush, stdout)
 
     def info_print(self, msg, flush=True):
         """
@@ -83,8 +101,7 @@ class Logger:
         :param info: 日志信息
         :param flush: 是否立即输出
         """
-        print(msg, flush=flush)
-        self.info(msg, flush)
+        self.info(msg, flush, stdout=True)
 
     def warning_print(self, msg, flush=True):
         """
@@ -92,8 +109,7 @@ class Logger:
         :param warning: 警告信息
         :param flush: 是否立即输出
         """
-        print(msg, flush=flush)
-        self.warning(msg, flush)
+        self.warning(msg, flush, stdout=True)
 
     def error_print(self, msg, flush=True):
         """
@@ -101,12 +117,11 @@ class Logger:
         :param error: 错误信息
         :param flush: 是否立即输出
         """
-        print(msg, flush=flush)
-        self.error(msg, flush)
+        self.error(msg, flush, stdout=True)
 
     def flush(self):
         """
-        强制写入文件
+        将所有缓存中的日志写入文件
         """
         with open(self.log_file_path, 'a') as f:
             for log in self.log_buffer:
