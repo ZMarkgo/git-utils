@@ -1,4 +1,8 @@
 from common.GitFilesFilter import split_cpp_modules
+from common.Logger import LoggerFactory, LogMetaInfo
+
+# 日志配置信息
+LOG_META_INFO = LogMetaInfo(__file__)
 
 
 def main():
@@ -23,15 +27,18 @@ def main():
     track_gitignore = True
     regex_with_glob = False
 
-    split_cpp_modules(repo_path=repo_path,
-                    include_dirs_relative_pahts=include_dirs_relative_pahts,
-                    modules=modules,
-                    new_repo_name=new_repo_name,
-                    new_repo_location=new_repo_location,
-                    new_branch_name=new_branch_name,
-                    track_gitignore=track_gitignore,
-                    timer=None,
-                    regex_with_glob=regex_with_glob)
+    LoggerFactory.main_set_log_file_path(LOG_META_INFO.get_log_file_path())
+    with LoggerFactory.create_logger(tag=LOG_META_INFO.get_file_tag()) as logger:
+        logger.info_print("Start to split cpp modules.")
+        split_cpp_modules(repo_path=repo_path,
+                          include_dirs_relative_pahts=include_dirs_relative_pahts,
+                          modules=modules,
+                          new_repo_name=new_repo_name,
+                          new_repo_location=new_repo_location,
+                          new_branch_name=new_branch_name,
+                          track_gitignore=track_gitignore,
+                          timer=None,
+                          regex_with_glob=regex_with_glob)
 
 
 if __name__ == "__main__":

@@ -1,9 +1,44 @@
 import os
 import time
+from datetime import datetime
+import threading
+import traceback
+
 
 DEFAULT_LOG_FILE_PATH = './logs/log.log'
 # 默认时间格式，用于日志记录，带有年月日时分秒毫秒
 DEFAULT_TIME_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
+
+
+class ThreadSafeLogBuffer:
+    def __init__(self, max_log_buffer_size=100, max_log_buffer_str_len=1000):
+        self.log_buffer = []
+        self.log_buffer_str_len = 0
+        self.MAX_LOG_BUFFER_SIZE = max_log_buffer_size
+        self.MAX_LOG_BUFFER_STR_LEN = max_log_buffer_str_len
+        self.lock = threading.Lock()  # 创建一个锁
+
+    def append(self, msg):
+        with self.lock:  # 在修改共享资源前加锁
+            self.log_buffer.append(msg)
+            self.log_buffer_str_len += len(msg)
+
+    def is_full(self):
+        with self.lock:  # 访问共享资源时加锁
+            return len(self.log_buffer) >= self.MAX_LOG_BUFFER_SIZE or self.log_buffer_str_len >= self.MAX_LOG_BUFFER_STR_LEN
+
+    def clear(self):
+        with self.lock:  # 在修改共享资源前加锁
+            self.log_buffer.clear()
+            self.log_buffer_str_len = 0
+
+    def __len__(self):
+        with self.lock:  # 访问共享资源时加锁
+            return len(self.log_buffer)
+
+    def __iter__(self):
+        with self.lock:  # 迭代时加锁，确保一致性
+            return iter(self.log_buffer.copy())
 
 
 class LogBuffer:
@@ -31,29 +66,58 @@ class LogBuffer:
         return iter(self.log_buffer)
 
 
+class LogMetaInfo:
+    def __init__(self, file) -> None:
+        self.current_file_name = file.replace('\\', '/').split('/')[-1]
+        self.file_tag = self.current_file_name
+        self.date_now = time.strftime("%Y-%m-%d", time.localtime())
+        self.log_file_path = os.path.abspath(
+            f"./logs/{self.current_file_name}-{self.date_now}.log")
+
+    def get_current_file_name(self):
+        return self.current_file_name
+
+    def get_file_tag(self):
+        return self.file_tag
+
+    def get_date_now(self):
+        return self.date_now
+
+    def get_log_file_path(self):
+        return self.log_file_path
+
+
 class Logger:
-    def __init__(self, tag='', log_file_path='./logs/log.log',
+    def __init__(self, tag='', log_file_path=DEFAULT_LOG_FILE_PATH,
                  time_format=DEFAULT_TIME_FORMAT,
+                 log_buffer: ThreadSafeLogBuffer = None,
                  max_log_buffer_size=100, max_log_buffer_str_len=1000):
-        self.TAG = tag
+        self.tag = tag
         self.log_file_path = log_file_path
         self.time_format = time_format
-        self.log_buffer = LogBuffer(
-            max_log_buffer_size, max_log_buffer_str_len)
+        if log_buffer is None:
+            self.log_buffer = ThreadSafeLogBuffer(
+                max_log_buffer_size, max_log_buffer_str_len)
+        else:
+            self.log_buffer = log_buffer
 
         if not os.path.exists(os.path.dirname(self.log_file_path)):
             os.makedirs(os.path.dirname(self.log_file_path))
-        if not os.path.exists(self.log_file_path):
-            os.mknod(self.log_file_path)
+
+        with open(self.log_file_path, 'a') as f:
+            f.write('')
 
     def format_info(self, info):
-        return f"{time.strftime(self.time_format, time.localtime())} [{self.TAG}] INFO {info}"
+        current_time = datetime.now().strftime(self.time_format)
+        return f"{current_time} [{self.tag}] INFO {info}"
 
     def format_warning(self, warning):
-        return f"{time.strftime(self.time_format, time.localtime())} [{self.TAG}] WARNING {warning}"
+        current_time = datetime.now().strftime(self.time_format)
+        return f"{current_time} [{self.tag}] WARNING {warning}"
 
     def format_error(self, error):
-        return f"{time.strftime(self.time_format, time.localtime())} [{self.TAG}] ERROR {error}"
+        current_time = datetime.now().strftime(self.time_format)
+        return f"{current_time} [{self.tag}] ERROR {error}"
 
     def log_msg(self, msg, flush=True, stdout=False):
         """
@@ -134,12 +198,29 @@ class Logger:
         """
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(self, exc_type, exc_value, exc_traceback):
         """
         退出上下文管理器
         """
         self.flush()
-        # 可以处理异常
+
+        # 打印异常的详细信息
         if exc_type is not None:
-            print(f"Exception occurred: {exc_value}")
+            print("Exception occurred:")
+            traceback.print_exception(exc_type, exc_value, exc_traceback)
+
         return True  # 如果要抑制异常，返回 True，否则返回 False
+
+
+class LoggerFactory:
+
+    log_file_path: str = DEFAULT_LOG_FILE_PATH
+    thread_safe_log_buffer: ThreadSafeLogBuffer = ThreadSafeLogBuffer()
+
+    @classmethod
+    def main_set_log_file_path(cls, log_file_path):
+        cls.log_file_path = log_file_path
+
+    @classmethod
+    def create_logger(cls, tag='', time_format=DEFAULT_TIME_FORMAT):
+        return Logger(tag=tag, log_file_path=cls.log_file_path, time_format=time_format, log_buffer=cls.thread_safe_log_buffer)
