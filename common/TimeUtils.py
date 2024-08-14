@@ -1,4 +1,5 @@
 import time
+from common.Logger import Logger
 
 
 def format_time_in_seconds(seconds):
@@ -27,10 +28,11 @@ def format_all_time(seconds):
 
 
 class Timer:
-    def __init__(self) -> None:
+    def __init__(self, logger: Logger = None) -> None:
         self.time_start = time.time()
         self.time_cur = time.time()
         self.time_end = None
+        self.logger = logger
 
     def lap(self):
         self.time_cur = time.time()
@@ -38,7 +40,11 @@ class Timer:
     def lap_and_show(self, message="Lap time"):
         time_now = time.time()
         time_cost = time_now - self.time_cur
-        print(f'{message}: {format_all_time(time_cost)}')
+        msg = f'{message}: {format_all_time(time_cost)}'
+        if self.logger:
+            self.logger.info_print(msg)
+        else:
+            print(msg)
         self.time_cur = time_now
 
     def end(self):
@@ -50,5 +56,8 @@ class Timer:
 
     def show_time_cost(self, message="Time cost"):
         time_cost_in_seconds = time.time() - self.time_start
-        print(
-            f'{message}: {format_all_time(time_cost_in_seconds)}')
+        msg = f'{message}: {format_all_time(time_cost_in_seconds)}'
+        if self.logger:
+            self.logger.info_print(msg)
+        else:
+            print(msg)
