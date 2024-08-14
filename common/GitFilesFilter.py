@@ -5,7 +5,6 @@ from common.GitUtils import copy_dir, remove_dir, list_gitignore_files, get_repo
 from common.GitUtils import show_commit_count, show_count_files_commits, show_earliest_commit_time
 from common.PrintUtils import get_sep, print_sep
 from common.FileUtils import remove_prefix_slash_and_dot, show_count_file_ext
-from common.GitFilesFilter import split_files, statistics_split_info
 from common.CppHeaderUtils import get_relative_headers_of_files, get_relative_headers_of_files_all_commits, get_relative_headers_of_modules
 from common.Logger import Logger
 from common.TimeUtils import Timer
@@ -202,7 +201,7 @@ def split_cpp_files(repo_path, include_dirs_relative_pahts, target_c_files,
             shouldRecursion=True)
         target_paths.extend(headers)
         print(f"target file or dir num: {len(target_paths)}")
-        timer.show_time_cost("Get headers")
+        timer.lap_and_show("Get headers")
 
         split_files(original_repo_path=repo_path,
                     target_paths=target_paths,
@@ -244,7 +243,13 @@ def split_cpp_modules(repo_path, include_dirs_relative_pahts, modules: list,
         target_paths.extend(headers)
         target_paths.extend(modules)
         print(f"target file or dir num: {len(target_paths)}")
-        timer.show_time_cost("Get headers")
+        timer.lap_and_show("Get headers")
+
+        timer.lap()
+        print(f"{len(headers)}, {headers}")
+        print(f"{len(unexist_headers)}, {unexist_headers}")
+        print(f"{len(target_cpp_files)}, {target_cpp_files}")
+        timer.lap_and_show("Show headers and target files")
 
         split_files(original_repo_path=repo_path,
                     target_paths=target_paths,
