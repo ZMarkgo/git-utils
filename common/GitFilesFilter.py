@@ -3,10 +3,13 @@ import sys
 import subprocess
 from common.GitUtils import copy_dir, remove_dir, list_gitignore_files, get_repo_size_info, get_repo_size_change_info, remove_all_git_remotes, add_virtual_remote, create_branch, show_commit_count, show_earliest_commit_time
 from common.GitUtils import show_commit_count, show_count_files_commits, show_earliest_commit_time
-from common.TimeUtils import Timer
 from common.PrintUtils import get_sep, print_sep
-from common.Logger import Logger
 from common.FileUtils import remove_prefix_slash_and_dot, show_count_file_ext
+from common.GitFilesFilter import split_files, statistics_split_info
+from common.CppHeaderUtils import get_relative_headers_of_files, get_relative_headers_of_files_all_commits
+from common.Logger import Logger
+from common.TimeUtils import Timer
+import traceback
 import time
 
 CURRENT_FILE_NAME = __file__.split('/')[-1]
@@ -22,7 +25,9 @@ def split_files(original_repo_path="", target_paths: list = [],
                 timer: Timer = None,
                 preserve_commit_hashes=True,
                 regex_with_glob=False):
-
+    """
+    通用方法，用于提取指定文件及其历史记录到新的仓库
+    """
     with Logger(tag=TAG, log_file_path=LOG_FILE_PATH) as logger:
         if timer:
             timer.lap()
@@ -152,8 +157,7 @@ def split_files(original_repo_path="", target_paths: list = [],
 def statistics_split_info(repo_path, cpp_file_relative_paths, timer: Timer = None):
     if not timer:
         timer = Timer()
-    else:
-        timer.lap()
+
     print_sep('count files')
     timer.lap()
     show_count_file_ext(repo_path, '.c')
@@ -177,3 +181,47 @@ def statistics_split_info(repo_path, cpp_file_relative_paths, timer: Timer = Non
 
     timer.end()
     timer.show_time_cost()
+
+
+def split_cpp_files(repo_path, include_dirs_relative_pahts, target_c_files,
+                    new_repo_name, new_repo_location, new_branch_name,
+                    track_gitignore, regex_with_glob, timer: Timer):
+    if timer is None:
+        timer = Timer()
+    try:
+        target_paths = target_c_files.copy()
+        timer.lap()
+        # 基于当前版本分析得到目标c文件所有的头文件（包括头文件嵌套的头文件），
+        # 以及c文件提交历史中的头文件
+        # headers = get_relative_headers_of_files_all_commits(
+        #     repo_path, target_paths, include_dirs_relative_pahts,
+        #     shouldRecursion=True, timer=timer)
+        # 基于当前版本分析得到目标c文件所有的头文件（包括头文件嵌套的头文件）
+        headers, _ = get_relative_headers_of_files(
+            repo_path, target_paths, include_dirs_relative_pahts,
+            shouldRecursion=True)
+        target_paths.extend(headers)
+        print(f"target file or dir num: {len(target_paths)}")
+        timer.show_time_cost("Get headers")
+
+        split_files(original_repo_path=repo_path,
+                    target_paths=target_paths,
+                    new_repo_name=new_repo_name,
+                    new_repo_location=new_repo_location,
+                    new_branch_name=new_branch_name,
+                    track_gitignore=track_gitignore,
+                    timer=timer,
+                    regex_with_glob=regex_with_glob)
+    except Exception as e:
+        print(f"Error: {e}")
+        traceback.print_exc()
+    finally:
+        timer.end()
+        timer.show_time_cost()
+
+    try:
+        new_repo_path = f"{new_repo_location}/{new_repo_name}"
+        statistics_split_info(new_repo_path, target_c_files, timer=timer)
+    except Exception as e:
+        print(f"Error: {e}")
+        traceback.print_exc()
