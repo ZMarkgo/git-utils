@@ -205,6 +205,27 @@ def get_relative_headers_of_files(repo_path, cpp_files, include_dirs_relative_pa
     return list(headers_set), list(unexist_headers_set)
 
 
+def get_relative_headers_of_modules(repo_path, modules, include_dirs_relative_pahts, shouldRecursion=True) -> Tuple[list[str], list[str], list[str]]:
+    """
+    :return: headers, unexist_headers, cpp_files
+    """
+    headers_set = set()
+    unexist_headers_set = set()
+    cpp_files_set = set()
+    for module in modules:
+        module_path = os.path.join(repo_path, module)
+        # 获取模块下的所有C/CPP文件的相对路径
+        cpp_files = [os.path.relpath(os.path.join(root, file), repo_path) for root, _, files in os.walk(
+            module_path) for file in files if file.endswith('.c') or file.endswith('.cpp')]
+        for cpp_file in cpp_files:
+            cpp_files_set.add(cpp_file)
+            headers, unexist_headers = get_relative_headers(
+                repo_path, cpp_file, include_dirs_relative_pahts, shouldRecursion)
+            headers_set.update(headers)
+            unexist_headers_set.update(unexist_headers)
+    return list(headers_set), list(unexist_headers_set), list(cpp_files_set)
+
+
 def extract_include_header_changes(diff_text):
     """
     从差异内容中提取修改的头文件

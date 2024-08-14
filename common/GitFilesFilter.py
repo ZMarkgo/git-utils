@@ -6,7 +6,7 @@ from common.GitUtils import show_commit_count, show_count_files_commits, show_ea
 from common.PrintUtils import get_sep, print_sep
 from common.FileUtils import remove_prefix_slash_and_dot, show_count_file_ext
 from common.GitFilesFilter import split_files, statistics_split_info
-from common.CppHeaderUtils import get_relative_headers_of_files, get_relative_headers_of_files_all_commits
+from common.CppHeaderUtils import get_relative_headers_of_files, get_relative_headers_of_files_all_commits, get_relative_headers_of_modules
 from common.Logger import Logger
 from common.TimeUtils import Timer
 import traceback
@@ -222,6 +222,48 @@ def split_cpp_files(repo_path, include_dirs_relative_pahts, target_c_files,
     try:
         new_repo_path = f"{new_repo_location}/{new_repo_name}"
         statistics_split_info(new_repo_path, target_c_files, timer=timer)
+    except Exception as e:
+        print(f"Error: {e}")
+        traceback.print_exc()
+
+
+# TODO 时间
+def split_cpp_modules(repo_path, include_dirs_relative_pahts, modules: list,
+                      new_repo_name, new_repo_location, new_branch_name,
+                      track_gitignore, regex_with_glob, timer: Timer):
+    if timer is None:
+        timer = Timer()
+
+    try:
+        timer.lap()
+        target_paths = []
+        # 基于当前版本分析得到目标模块下所有C/CPP文件需要的头文件（包括头文件嵌套的头文件）
+        headers, unexist_headers, target_cpp_files = get_relative_headers_of_modules(
+            repo_path, modules, include_dirs_relative_pahts,
+            shouldRecursion=True)
+        target_paths.extend(headers)
+        target_paths.extend(modules)
+        print(f"target file or dir num: {len(target_paths)}")
+        timer.show_time_cost("Get headers")
+
+        split_files(original_repo_path=repo_path,
+                    target_paths=target_paths,
+                    new_repo_name=new_repo_name,
+                    new_repo_location=new_repo_location,
+                    new_branch_name=new_branch_name,
+                    track_gitignore=track_gitignore,
+                    timer=timer,
+                    regex_with_glob=regex_with_glob)
+    except Exception as e:
+        print(f"Error: {e}")
+        traceback.print_exc()
+    finally:
+        timer.end()
+        timer.show_time_cost()
+
+    try:
+        new_repo_path = f"{new_repo_location}/{new_repo_name}"
+        statistics_split_info(new_repo_path, target_cpp_files, timer=timer)
     except Exception as e:
         print(f"Error: {e}")
         traceback.print_exc()
