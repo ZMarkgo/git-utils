@@ -19,3 +19,7 @@ logFile=${logFilePath}/back_run_cmd.sh-${currentDate}.log
 # 后台运行命令
 echo "==================================================================================" >> $logFile
 nohup $RUN_CMD_SCRPIT $@ >> $logFile 2>&1 &
+
+# 输出后台运行的进程ID (PID)
+pid=$!
+echo "Command is running in the background with PID: $pid"
