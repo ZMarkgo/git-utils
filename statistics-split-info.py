@@ -7,7 +7,7 @@ if __name__ == '__main__':
     parser.add_argument('-r', '--repo', required=True,
                         help='The path to the Git repository.')
     parser.add_argument('-tf', '--target_files', nargs='+',
-                        required=True, help='The target files to be counted.')
+                        required=False, default=[], help='The target files to be counted.')
     args = parser.parse_args()
     repo_path = args.repo
     cpp_file_relative_paths = args.target_files
