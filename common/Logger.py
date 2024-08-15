@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-from common.Timer import format_date_now
+from common.TimeUtils import format_date_now
 import threading
 import traceback
 
