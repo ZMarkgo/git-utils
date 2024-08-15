@@ -6,8 +6,8 @@ from common.GitUtils import format_count_files_commits_msg
 from common.PrintUtils import get_sep, print_sep
 from common.FileUtils import remove_prefix_slash_and_dot, count_all_file_ext, format_file_ext_count_msg
 from common.CppHeaderUtils import get_relative_headers_of_files, get_relative_headers_of_files_all_commits, get_relative_headers_of_modules
-from common.Logger import Logger, LoggerFactory, LogMetaInfo
-from common.TimeUtils import Timer
+from common.Logger import LoggerFactory, LogMetaInfo
+from common.TimeUtils import Timer, validate_dates
 import traceback
 
 # 日志配置信息
@@ -20,15 +20,25 @@ LOG_FILE_PATH = log_meta_info.get_log_file_path()
 def split_files(original_repo_path="", target_paths: list = [],
                 new_repo_name="", new_repo_location="", new_branch_name="",
                 track_gitignore=False,
-                timer: Timer = None,
                 preserve_commit_hashes=True,
-                regex_with_glob=False):
+                regex_with_glob=False,
+                start_date=None, end_date=None):
     """
     通用方法，用于提取指定文件及其历史记录到新的仓库
+    :param original_repo_path: 原始仓库绝对路径
+    :param target_paths: 目标文件路径列表
+    :param new_repo_name: 新仓库名称
+    :param new_repo_location: 新仓库位置（所在文件夹的绝对路径）
+    :param new_branch_name: 新分支名称
+    :param track_gitignore: 是否跟踪 .gitignore 文件
+    :param timer: 计时器
+    :param preserve_commit_hashes: 是否保留原始提交哈希，而不是生成新的提交哈希
+    :param regex_with_glob: 是否使用正则表达式匹配路径
+    :param start_date: 起始日期, 格式为 'YYYY-MM-DD'
+    :param end_date: 结束日期, 格式为 'YYYY-MM-DD'
     """
     with LoggerFactory.create_logger(f"{TAG}#split_files") as logger:
-        if timer is None:
-            timer = Timer(logger=logger)
+        timer = Timer(logger=logger)
 
         timer.lap()
         logger.info_print(get_sep("参数检查"))
@@ -52,6 +62,11 @@ def split_files(original_repo_path="", target_paths: list = [],
         # 检查新分支名称是否为空字符串
         if not new_branch_name:
             logger.error_print("The new_branch_name is empty.")
+            sys.exit(1)
+        # 检查 start_date 和 end_date 是否符合格式
+        dates_valid, dates_error = validate_dates(start_date, end_date)
+        if not dates_valid:
+            logger.error_print(f"Invalid dates: {dates_error}")
             sys.exit(1)
         timer.lap_and_show("Check parameters")
 
@@ -102,6 +117,24 @@ def split_files(original_repo_path="", target_paths: list = [],
             logger.info_print(
                 f"Target .gitignore file num: {len(gitignore_files)}")
             logger.info(f"Target .gitignore files: {gitignore_files}")
+        # 添加日期过滤
+        # 实现上使用自定义回调函数
+        # 参阅https://htmlpreview.github.io/?https://github.com/newren/git-filter-repo/blob/docs/html/git-filter-repo.html#CALLBACKS
+        # 在 git-filter-repo 中使用 --commit-callback 参数，传入一个自定义的回调函数（字符串形式的python代码）
+        if start_date:
+            s_date_str = f'b"{start_date}T00:00:00"'
+            start_callback = f'if commit.committer_date < {s_date_str} or author_date < {s_date_str}: \n\tcommit.skip()\n'
+        else:
+            start_callback = ''
+        if end_date:
+            e_date_str = f'b"{end_date}T23:59:59"'
+            end_callback = f'if commit.committer_date > {e_date_str} or author_date > {e_date_str}: \n\tcommit.skip()\n'
+        else:
+            end_callback = ''
+        commit_callback = f'{start_callback}{end_callback}'
+        if commit_callback:
+            logger.info_print(f"commit_callback: \n{commit_callback}")
+            split_cmd.extend(['--commit-callback', commit_callback])
         # 保留原始提交哈希，而不是生成新的提交哈希
         if preserve_commit_hashes:
             split_cmd.extend(['--preserve-commit-hashes'])
@@ -147,10 +180,9 @@ def split_files(original_repo_path="", target_paths: list = [],
         logger.info_print(get_sep("处理完成"))
 
 
-def statistics_split_info(repo_path, cpp_file_relative_paths, timer: Timer = None):
+def statistics_split_info(repo_path, cpp_file_relative_paths):
     with LoggerFactory.create_logger(f"{TAG}#statistics_split_info") as logger:
-        if timer is None:
-            timer = Timer(logger=logger)
+        timer = Timer(logger=logger)
 
         logger.info_print("Start statistics split info")
 
@@ -184,10 +216,9 @@ def statistics_split_info(repo_path, cpp_file_relative_paths, timer: Timer = Non
 
 def split_cpp_files(repo_path, include_dirs_relative_pahts, target_c_files,
                     new_repo_name, new_repo_location, new_branch_name,
-                    track_gitignore, regex_with_glob, timer: Timer):
+                    track_gitignore, regex_with_glob):
     with LoggerFactory.create_logger(f"{TAG}#split_cpp_files") as logger:
-        if timer is None:
-            timer = Timer(logger=logger)
+        timer = Timer(logger=logger)
         try:
             target_paths = target_c_files.copy()
             timer.lap()
@@ -230,10 +261,10 @@ def split_cpp_files(repo_path, include_dirs_relative_pahts, target_c_files,
 # TODO 时间
 def split_cpp_modules(repo_path, include_dirs_relative_pahts, modules: list,
                       new_repo_name, new_repo_location, new_branch_name,
-                      track_gitignore, regex_with_glob, timer: Timer):
+                      track_gitignore, regex_with_glob,
+                      start_date=None, end_date=None):
     with LoggerFactory.create_logger(f"{TAG}#split_cpp_modules") as logger:
-        if timer is None:
-            timer = Timer(logger=logger)
+        timer = Timer(logger=logger)
 
         try:
             timer.lap()
@@ -260,7 +291,8 @@ def split_cpp_modules(repo_path, include_dirs_relative_pahts, modules: list,
                         new_branch_name=new_branch_name,
                         track_gitignore=track_gitignore,
                         timer=timer,
-                        regex_with_glob=regex_with_glob)
+                        regex_with_glob=regex_with_glob,
+                        start_date=start_date, end_date=end_date)
         except Exception as e:
             logger.error_print(f"Error: {e}")
             logger.error_print(traceback.format_exc())

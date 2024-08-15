@@ -30,7 +30,6 @@ def main():
                     new_repo_location=new_repo_location,
                     new_branch_name=new_branch_name,
                     track_gitignore=track_gitignore,
-                    timer=None,
                     regex_with_glob=regex_with_glob)
 
 

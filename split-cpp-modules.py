@@ -1,5 +1,6 @@
 from common.GitFilesFilter import split_cpp_modules
 from common.Logger import LoggerFactory, LogMetaInfo
+from common.TimeUtils import format_date_now
 
 # 日志配置信息
 LOG_META_INFO = LogMetaInfo(__file__)
@@ -26,6 +27,8 @@ def main():
     new_branch_name = 'demo'
     track_gitignore = True
     regex_with_glob = False
+    start_date = '2021-01-01'
+    end_date = format_date_now()
 
     LoggerFactory.main_set_log_file_path(
         LOG_META_INFO.get_log_file_path(file_suffix=new_repo_name))
@@ -38,8 +41,9 @@ def main():
                           new_repo_location=new_repo_location,
                           new_branch_name=new_branch_name,
                           track_gitignore=track_gitignore,
-                          timer=None,
-                          regex_with_glob=regex_with_glob)
+                          regex_with_glob=regex_with_glob,
+                          start_date=start_date,
+                          end_date=end_date)
 
 
 if __name__ == "__main__":

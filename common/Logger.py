@@ -1,6 +1,7 @@
 import os
 import time
 from datetime import datetime
+from common.TimeUtils import format_date_now
 import threading
 import traceback
 
@@ -70,7 +71,7 @@ class LogMetaInfo:
     def __init__(self, file) -> None:
         self.current_file_name = file.replace('\\', '/').split('/')[-1]
         self.file_tag = self.current_file_name
-        self.date_now = time.strftime("%Y-%m-%d", time.localtime())
+        self.date_now = format_date_now()
         self.log_file_path = os.path.abspath(
             f"./logs/{self.date_now}-{self.current_file_name}.log")
 
@@ -82,7 +83,7 @@ class LogMetaInfo:
 
     def get_date_now(self):
         return self.date_now
-    
+
     def get_log_file_path(self, file_prefix="", file_suffix="", file_extension=".log"):
         prefix = f"{file_prefix}-" if file_prefix else ""
         suffix = f"-{file_suffix}" if file_suffix else ""
