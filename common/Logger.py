@@ -72,7 +72,7 @@ class LogMetaInfo:
         self.file_tag = self.current_file_name
         self.date_now = time.strftime("%Y-%m-%d", time.localtime())
         self.log_file_path = os.path.abspath(
-            f"./logs/{self.current_file_name}-{self.date_now}.log")
+            f"./logs/{self.date_now}-{self.current_file_name}.log")
 
     def get_current_file_name(self):
         return self.current_file_name
@@ -82,9 +82,11 @@ class LogMetaInfo:
 
     def get_date_now(self):
         return self.date_now
-
-    def get_log_file_path(self):
-        return self.log_file_path
+    
+    def get_log_file_path(self, file_prefix="", file_suffix="", file_extension=".log"):
+        prefix = f"{file_prefix}-" if file_prefix else ""
+        suffix = f"-{file_suffix}" if file_suffix else ""
+        return os.path.abspath(f"./logs/{prefix}{self.date_now}-{self.current_file_name}{suffix}{file_extension}")
 
 
 class Logger:

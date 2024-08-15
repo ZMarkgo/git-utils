@@ -27,7 +27,8 @@ def main():
     track_gitignore = True
     regex_with_glob = False
 
-    LoggerFactory.main_set_log_file_path(LOG_META_INFO.get_log_file_path())
+    LoggerFactory.main_set_log_file_path(
+        LOG_META_INFO.get_log_file_path(file_suffix=new_repo_name))
     with LoggerFactory.create_logger(tag=LOG_META_INFO.get_file_tag()) as logger:
         logger.info_print("Start to split cpp modules.")
         split_cpp_modules(repo_path=repo_path,
