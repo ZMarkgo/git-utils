@@ -1,6 +1,6 @@
 from common.GitUtils import show_earliest_commit_time
 import argparse
-from common.TimeUtils import Timer
+from common.Timer import Timer
 
 if __name__ == '__main__':
     timer = Timer()

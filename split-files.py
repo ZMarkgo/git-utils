@@ -1,5 +1,5 @@
 import argparse
-from common.TimeUtils import Timer
+from common.Timer import Timer
 from common.GitFilesFilter import split_files
 
 

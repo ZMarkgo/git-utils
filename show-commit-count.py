@@ -1,6 +1,6 @@
 from common.GitUtils import show_commit_count
 import argparse
-from common.TimeUtils import Timer
+from common.Timer import Timer
 
 if __name__ == '__main__':
     timer = Timer()

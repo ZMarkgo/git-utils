@@ -3,7 +3,7 @@ import re
 from typing import Set, Tuple
 from tqdm import tqdm
 from common.GitUtils import get_file_commits, get_commit_diff
-from common.TimeUtils import Timer
+from common.Timer import Timer
 
 
 def normalize_path(path):
