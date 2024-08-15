@@ -211,12 +211,23 @@ def count_files_commits(repo_path, file_relative_paths):
     return len(get_files_commits(repo_path, file_relative_paths))
 
 
+def format_count_files_commits_msg(repo_path, file_relative_paths):
+    """
+    统计并格式化多个文件的提交记录信息
+    :param repo_path: 仓库路径
+    :param file_relative_paths: 文件相对路径列表
+    """
+    commits_count = count_files_commits(repo_path, file_relative_paths)
+    return f"Commits count of {file_relative_paths}: \n\t{commits_count}"
+
+
 def show_count_files_commits(repo_path, file_relative_paths):
     """
-    显示多个文件的提交记录
+    显示多个文件的提交记录信息
+    :param repo_path: 仓库路径
+    :param file_relative_paths: 文件相对路径列表
     """
-    commits = get_files_commits(repo_path, file_relative_paths)
-    print(f"Commits count of {file_relative_paths}: \n\t{len(commits)}")
+    print(format_count_files_commits_msg(repo_path, file_relative_paths))
 
 
 def checkout_commit(repo_path, commit_hash):
@@ -269,9 +280,19 @@ def get_commit_files(repo_path, commit_hash) -> list:
     return result.stdout.splitlines()
 
 
-def show_commit_count(repo_path='.'):
+def format_get_commit_count_msg(repo_path='.'):
+    """
+    获取并格式化提交数量信息
+    """
     commit_count = get_commit_count(repo_path=repo_path)
-    print(f"Commit count: {commit_count}")
+    return f"Commit count: {commit_count}"
+
+
+def show_commit_count(repo_path='.'):
+    """
+    显示提交数量信息
+    """
+    print(format_get_commit_count_msg(repo_path=repo_path))
 
 
 def get_commit_diff(repo_path, commit_hash):
@@ -381,9 +402,16 @@ def get_earliest_commit_date(repo_path):
     return earliest_commit_date
 
 
+def format_get_earliest_commit_date_msg(repo_path='.'):
+    """
+    获取并格式化仓库最早提交时间信息
+    """
+    earliest_commit_date = get_earliest_commit_date(repo_path=repo_path)
+    return f"Earliest commit date: {earliest_commit_date}"
+
+
 def show_earliest_commit_time(repo_path='.'):
     """
     展示仓库最早的提交时间 
     """
-    earliest_commit_date = get_earliest_commit_date(repo_path=repo_path)
-    print(f"Earliest commit date: {earliest_commit_date}")
+    print(format_get_earliest_commit_date_msg(repo_path=repo_path))

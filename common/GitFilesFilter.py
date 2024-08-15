@@ -1,10 +1,10 @@
 import os
 import sys
 import subprocess
-from common.GitUtils import copy_dir, remove_dir, list_gitignore_files, get_repo_size_info, get_repo_size_change_info, remove_all_git_remotes, add_virtual_remote, create_branch, show_commit_count, show_earliest_commit_time
-from common.GitUtils import show_commit_count, show_count_files_commits, show_earliest_commit_time
+from common.GitUtils import copy_dir, remove_dir, list_gitignore_files, get_repo_size_info, get_repo_size_change_info, remove_all_git_remotes, add_virtual_remote, create_branch, format_get_commit_count_msg, format_get_earliest_commit_date_msg
+from common.GitUtils import format_count_files_commits_msg
 from common.PrintUtils import get_sep, print_sep
-from common.FileUtils import remove_prefix_slash_and_dot, show_count_file_ext
+from common.FileUtils import remove_prefix_slash_and_dot, count_all_file_ext, format_file_ext_count_msg
 from common.CppHeaderUtils import get_relative_headers_of_files, get_relative_headers_of_files_all_commits, get_relative_headers_of_modules
 from common.Logger import Logger, LoggerFactory, LogMetaInfo
 from common.TimeUtils import Timer
@@ -27,8 +27,10 @@ def split_files(original_repo_path="", target_paths: list = [],
     通用方法，用于提取指定文件及其历史记录到新的仓库
     """
     with LoggerFactory.create_logger(f"{TAG}#split_files") as logger:
-        if timer:
-            timer.lap()
+        if timer is None:
+            timer = Timer(logger=logger)
+
+        timer.lap()
         logger.info_print(get_sep("参数检查"))
         # 检查原始仓库是否存在
         if not os.path.isdir(os.path.join(original_repo_path, ".git")):
@@ -51,8 +53,7 @@ def split_files(original_repo_path="", target_paths: list = [],
         if not new_branch_name:
             logger.error_print("The new_branch_name is empty.")
             sys.exit(1)
-        if timer:
-            timer.lap_and_show("Check parameters")
+        timer.lap_and_show("Check parameters")
 
         logger.info_print(get_sep("复制仓库"))
         # 复制原始仓库到新的位置
@@ -61,8 +62,7 @@ def split_files(original_repo_path="", target_paths: list = [],
         logger.info_print(f"New repo location: {new_repo_path}")
         copy_dir(original_repo_path, new_repo_path)
 
-        if timer:
-            timer.lap_and_show("Copy repo")
+        timer.lap_and_show("Copy repo")
 
         logger.info_print(get_sep("提取文件及其历史"))
         # 切换到仓库
@@ -99,7 +99,8 @@ def split_files(original_repo_path="", target_paths: list = [],
             for gitignore_file in gitignore_files:
                 split_cmd.extend(['--path', gitignore_file])
                 target_num += 1
-            logger.info_print(f"Target .gitignore file num: {len(gitignore_files)}")
+            logger.info_print(
+                f"Target .gitignore file num: {len(gitignore_files)}")
             logger.info(f"Target .gitignore files: {gitignore_files}")
         # 保留原始提交哈希，而不是生成新的提交哈希
         if preserve_commit_hashes:
@@ -109,8 +110,7 @@ def split_files(original_repo_path="", target_paths: list = [],
         logger.info(f"Running command: {' '.join(split_cmd)}")
         subprocess.run(split_cmd, check=True)
 
-        if timer:
-            timer.lap_and_show("Extract files and history")
+        timer.lap_and_show("Extract files and history")
 
         # 仓库瘦身
         logger.info_print(get_sep("仓库瘦身"))
@@ -128,59 +128,58 @@ def split_files(original_repo_path="", target_paths: list = [],
             repo_size_before, repo_size_after)
         logger.info_print(change_info)
 
-        if timer:
-            timer.lap_and_show("Slim repo")
+        timer.lap_and_show("Slim repo")
 
         # 为新仓库添加虚拟远程仓库
         logger.info_print(get_sep("添加虚拟远程仓库"))
         remove_all_git_remotes()
         add_virtual_remote(new_repo_name)
 
-        if timer:
-            timer.lap_and_show("Add virtual remote")
+        timer.lap_and_show("Add virtual remote")
 
         # 创建新分支
         logger.info_print(get_sep("创建新分支"))
         logger.info_print(f"New branch name: {new_branch_name}")
         create_branch(new_branch_name)
 
-        if timer:
-            timer.lap_and_show("Create new branch")
+        timer.lap_and_show("Create new branch")
 
         logger.info_print(get_sep("处理完成"))
-        # 展示提交数
-        show_commit_count()
-        # 展示最早的提交时间
-        show_earliest_commit_time()
 
 
 def statistics_split_info(repo_path, cpp_file_relative_paths, timer: Timer = None):
-    if not timer:
-        timer = Timer()
+    with LoggerFactory.create_logger(f"{TAG}#statistics_split_info") as logger:
+        if timer is None:
+            timer = Timer(logger=logger)
 
-    print_sep('count files')
-    timer.lap()
-    show_count_file_ext(repo_path, '.c')
-    show_count_file_ext(repo_path, '.h')
-    timer.lap_and_show('Counting .c and .h files')
+        logger.info_print("Start statistics split info")
 
-    print_sep('count all commits')
-    timer.lap()
-    show_commit_count(repo_path)
-    timer.lap_and_show('Counting all commits')
+        logger.info_print(get_sep("Counting all files"))
+        timer.lap()
+        all_file_ext_counts = count_all_file_ext(repo_path)
+        # 展示所有文件类型的文件数量
+        for file_ext, count in all_file_ext_counts.items():
+            logger.info_print(format_file_ext_count_msg(file_ext, count))
+        timer.lap_and_show('Counting all files')
 
-    print_sep('count commits of target files')
-    timer.lap()
-    show_count_files_commits(repo_path, cpp_file_relative_paths)
-    timer.lap_and_show('Counting commits of target files')
+        logger.info_print(get_sep("Counting all commits"))
+        timer.lap()
+        logger.info_print(format_get_commit_count_msg(repo_path))
+        timer.lap_and_show('Counting all commits')
 
-    print_sep('show earliest commit time')
-    timer.lap()
-    show_earliest_commit_time(repo_path)
-    timer.lap_and_show('Showing earliest commit time')
+        logger.info_print(get_sep("Counting commits of target files"))
+        timer.lap()
+        logger.info_print(format_count_files_commits_msg(
+            repo_path, cpp_file_relative_paths))
+        timer.lap_and_show('Counting commits of target files')
 
-    timer.end()
-    timer.show_time_cost()
+        logger.info_print(get_sep("Showing earliest commit time"))
+        timer.lap()
+        logger.info_print(format_get_earliest_commit_date_msg(repo_path))
+        timer.lap_and_show('Showing earliest commit time')
+
+        timer.end()
+        timer.show_time_cost()
 
 
 def split_cpp_files(repo_path, include_dirs_relative_pahts, target_c_files,
