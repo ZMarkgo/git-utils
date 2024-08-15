@@ -134,6 +134,7 @@ def split_files(original_repo_path="", target_paths: list = [],
             end_callback = ''
         commit_callback = f'{start_callback}{end_callback}'
         if commit_callback:
+            commit_callback = f"'\n{commit_callback}'"
             logger.info_print(f"commit_callback: \n{commit_callback}")
             split_cmd.extend(['--commit-callback', commit_callback])
         # 保留原始提交哈希，而不是生成新的提交哈希
