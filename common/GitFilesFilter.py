@@ -242,7 +242,6 @@ def split_cpp_files(repo_path, include_dirs_relative_pahts, target_c_files,
                         new_repo_location=new_repo_location,
                         new_branch_name=new_branch_name,
                         track_gitignore=track_gitignore,
-                        timer=timer,
                         regex_with_glob=regex_with_glob)
         except Exception as e:
             logger.error_print(f"Error: {e}")
@@ -253,7 +252,7 @@ def split_cpp_files(repo_path, include_dirs_relative_pahts, target_c_files,
 
         try:
             new_repo_path = f"{new_repo_location}/{new_repo_name}"
-            statistics_split_info(new_repo_path, target_c_files, timer=timer)
+            statistics_split_info(new_repo_path, target_c_files)
         except Exception as e:
             logger.error_print(f"Error: {e}")
             logger.error_print(traceback.format_exc())
@@ -291,7 +290,6 @@ def split_cpp_modules(repo_path, include_dirs_relative_pahts, modules: list,
                         new_repo_location=new_repo_location,
                         new_branch_name=new_branch_name,
                         track_gitignore=track_gitignore,
-                        timer=timer,
                         regex_with_glob=regex_with_glob,
                         start_date=start_date, end_date=end_date)
         except Exception as e:
@@ -303,7 +301,7 @@ def split_cpp_modules(repo_path, include_dirs_relative_pahts, modules: list,
 
         try:
             new_repo_path = f"{new_repo_location}/{new_repo_name}"
-            statistics_split_info(new_repo_path, target_cpp_files, timer=timer)
+            statistics_split_info(new_repo_path, target_cpp_files)
         except Exception as e:
             logger.error_print(f"Error: {e}")
             logger.error_print(traceback.format_exc())

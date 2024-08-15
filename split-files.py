@@ -35,8 +35,7 @@ if __name__ == "__main__":
                     new_repo_name=new_repo_name,
                     new_repo_location=new_repo_location,
                     new_branch_name=new_branch_name,
-                    track_gitignore=track_gitignore,
-                    timer=timer)
+                    track_gitignore=track_gitignore)
     except Exception as e:
         print(f"Error: {e}")
 
