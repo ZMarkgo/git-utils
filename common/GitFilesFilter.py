@@ -258,7 +258,6 @@ def split_cpp_files(repo_path, include_dirs_relative_pahts, target_c_files,
             logger.error_print(traceback.format_exc())
 
 
-# TODO 时间
 def split_cpp_modules(repo_path, include_dirs_relative_pahts, modules: list,
                       new_repo_name, new_repo_location, new_branch_name,
                       track_gitignore, regex_with_glob,
@@ -279,9 +278,9 @@ def split_cpp_modules(repo_path, include_dirs_relative_pahts, modules: list,
             timer.lap_and_show("Get headers")
 
             timer.lap()
-            logger.info(f"{len(headers)}, {headers}")
-            logger.info(f"{len(unexist_headers)}, {unexist_headers}")
-            logger.info(f"{len(target_cpp_files)}, {target_cpp_files}")
+            logger.info(f"exist_headers: {len(headers)}, {headers}")
+            logger.info(f"unexist_headers: {len(unexist_headers)}, {unexist_headers}")
+            logger.info(f"target_cpp_files: {len(target_cpp_files)}, {target_cpp_files}")
             timer.lap_and_show("Show headers and target files")
 
             split_files(original_repo_path=repo_path,
