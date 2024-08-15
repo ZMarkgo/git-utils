@@ -1,6 +1,5 @@
 from common.GitFilesFilter import split_cpp_modules
 from common.Logger import LoggerFactory, LogMetaInfo
-from common.TimeUtils import format_date_now
 
 # 日志配置信息
 LOG_META_INFO = LogMetaInfo(__file__)
@@ -22,13 +21,13 @@ def main():
         './include/linux/compiler_types.h'
     ]
     modules = ['mm']
-    new_repo_name = 'linux-split-mm-1'
+    new_repo_name = 'linux-split-mm-2'
     new_repo_location = r"/home/app/repository"
     new_branch_name = 'demo'
     track_gitignore = True
     regex_with_glob = False
     start_date = '2021-01-01'
-    end_date = format_date_now()
+    end_date = LOG_META_INFO.get_date_now()
 
     LoggerFactory.main_set_log_file_path(
         LOG_META_INFO.get_log_file_path(file_suffix=new_repo_name))

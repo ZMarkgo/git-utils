@@ -7,7 +7,7 @@ from common.PrintUtils import get_sep, print_sep
 from common.FileUtils import remove_prefix_slash_and_dot, count_all_file_ext, format_file_ext_count_msg
 from common.CppHeaderUtils import get_relative_headers_of_files, get_relative_headers_of_files_all_commits, get_relative_headers_of_modules
 from common.Logger import LoggerFactory, LogMetaInfo
-from common.TimeUtils import Timer, validate_dates
+from common.Timer import Timer, validate_dates
 import traceback
 
 # 日志配置信息
