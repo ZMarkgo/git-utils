@@ -2,6 +2,12 @@ import os
 import shutil
 import subprocess
 import datetime
+from common.Logger import LoggerFactory, LogMetaInfo
+import traceback
+
+# 日志配置信息
+LOG_META_INFO = LogMetaInfo(__file__)
+TAG = LOG_META_INFO.get_file_tag()
 
 # 结尾不带斜杠
 ORIGIN_REPO_BASE_URL = "http://fdse.gitlab.com/platform"
@@ -199,8 +205,13 @@ def get_files_commits(repo_path, file_relative_paths) -> list:
     获取多个文件的提交记录
     """
     commits = set()
-    for file_relative_path in file_relative_paths:
-        commits.update(get_file_commits(repo_path, file_relative_path))
+    with LoggerFactory.create_logger(tag=f"{TAG}#get_files_commits") as logger:
+        for file_relative_path in file_relative_paths:
+            try:
+                commits.update(get_file_commits(repo_path, file_relative_path))
+            except Exception as e:
+                logger.error_print(f"Error: {e}")
+                logger.error_print(traceback.format_exc())
     return list(commits)
 
 
