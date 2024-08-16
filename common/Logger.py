@@ -116,13 +116,14 @@ class Logger:
             f.write('')
 
         self.info_print(
-            f"Logger created, log file path: {self.log_file_path}, \
-            time format: {self.time_format}, \
-            tag: {self.tag}, \
-            error_print_and_ignore: {self.error_print_and_ignore}, \
-            max_log_buffer_size: {max_log_buffer_size}, \
-            max_log_buffer_str_len: {max_log_buffer_str_len}, \
-            log_buffer: {type(self.log_buffer).__name__}")
+            f"Logger created, log file path: {self.log_file_path}, "
+            f"time format: {self.time_format}, "
+            f"tag: {self.tag}, "
+            f"error_print_and_ignore: {self.error_print_and_ignore}, "
+            f"max_log_buffer_size: {max_log_buffer_size}, "
+            f"max_log_buffer_str_len: {max_log_buffer_str_len}, "
+            f"log_buffer: {type(self.log_buffer).__name__}"
+        )
 
     def format_info(self, info):
         current_time = datetime.now().strftime(self.time_format)
