@@ -171,11 +171,20 @@ def split_files(original_repo_path="", target_paths: list = [],
         remove_dir('.git/filter-repo')
         # 清理未使用的对象
         # git reflog expire --expire=now --all && git gc --prune=now --aggressive
-        clean_cmd = ['git', 'reflog', 'expire', '--expire=now',
-                     '--all', '&&', 'git', 'gc', '--prune=now', '--aggressive']
-        run_cmd(cmd=clean_cmd,
-                stdout_handler=subprocess_stdout_handler, stderr_handler=subprocess_stderr_handler,
-                check=True)
+        reflog_cmd = ['git', 'reflog', 'expire', '--expire=now', '--all']
+        run_cmd(
+            cmd=reflog_cmd,
+            stdout_handler=subprocess_stdout_handler,
+            stderr_handler=subprocess_stderr_handler,
+            check=True
+        )
+        gc_cmd = ['git', 'gc', '--prune=now', '--aggressive']
+        run_cmd(
+            cmd=gc_cmd,
+            stdout_handler=subprocess_stdout_handler,
+            stderr_handler=subprocess_stderr_handler,
+            check=True
+        )
         repo_size_after = get_repo_size_info()
         change_info = get_repo_size_change_info(
             repo_size_before, repo_size_after)
