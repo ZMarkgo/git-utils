@@ -241,7 +241,7 @@ def format_count_files_commits_msg(repo_path, file_relative_paths):
         return f"Commits count of {exist_files}: \n\
             \tpaths_count: {len(exist_files)}, commits_count: {commits_count}\n\
             \tAll paths({len(file_relative_paths)}): {file_relative_paths}\n\
-            \tUnexist paths{len(unexist_files)}): {unexist_files}"
+            \tUnexist paths({len(unexist_files)}): {unexist_files}"
     else:
         return f"Commits count of {file_relative_paths}: \n\t{commits_count}"
 
