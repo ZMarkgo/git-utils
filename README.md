@@ -8,6 +8,22 @@ pip install -r requirements.txt
 
 # 使用方式
 
+## 分割c/cpp的多个文件 `split-cpp-files.py`
+
+在 [`split-cpp-files.py`](split-cpp-files.py) 文件中配置相关参数，然后直接运行脚本即可
+
+```shell
+python3 split-cpp-files.py
+```
+
+## 分割c/cpp的模块 `split-cpp-modules.py`
+
+在 [`split-cpp-modules.py`](split-cpp-modules.py) 文件中配置相关参数，然后直接运行脚本即可
+
+```shell
+python3 split-cpp-modules.py
+```
+
 ## 分割单个模块 `split-module.py`
 
 ```shell
