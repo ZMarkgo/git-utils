@@ -4,6 +4,7 @@ import subprocess
 import datetime
 from common.Logger import LoggerFactory, LogMetaInfo
 import traceback
+import json
 
 # 日志配置信息
 LOG_META_INFO = LogMetaInfo(__file__)
@@ -235,15 +236,23 @@ def format_count_files_commits_msg(repo_path, file_relative_paths):
     """
     commits_count, unexist_files = count_files_commits(
         repo_path, file_relative_paths)
+    
     if len(unexist_files) > 0:
         exist_files = [
             file for file in file_relative_paths if file not in unexist_files]
-        return f"Commits count of {exist_files}: \n\
+        
+        # 使用 json.dumps 将列表转换为 JSON 字符串
+        exist_files_json = json.dumps(exist_files, ensure_ascii=False)
+        file_relative_paths_json = json.dumps(file_relative_paths, ensure_ascii=False)
+        unexist_files_json = json.dumps(unexist_files, ensure_ascii=False)
+        
+        return f"Commits count of {exist_files_json}: \n\
             \tpaths_count: {len(exist_files)}, commits_count: {commits_count}\n\
-            \tAll paths({len(file_relative_paths)}): {file_relative_paths}\n\
-            \tUnexist paths({len(unexist_files)}): {unexist_files}"
+            \tAll paths({len(file_relative_paths)}): {file_relative_paths_json}\n\
+            \tUnexist paths({len(unexist_files)}): {unexist_files_json}"
     else:
-        return f"Commits count of {file_relative_paths}: \n\t{commits_count}"
+        file_relative_paths_json = json.dumps(file_relative_paths, ensure_ascii=False)
+        return f"Commits count of {file_relative_paths_json}: \n\t{commits_count}"
 
 
 def show_count_files_commits(repo_path, file_relative_paths):
