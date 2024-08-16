@@ -7,6 +7,7 @@ from common.PrintUtils import get_sep, print_sep
 from common.FileUtils import remove_prefix_slash_and_dot, count_all_file_ext, format_file_ext_count_msg
 from common.CppHeaderUtils import get_relative_headers_of_files, get_relative_headers_of_files_all_commits, get_relative_headers_of_modules
 from common.Logger import LoggerFactory, LogMetaInfo
+from common.CmdUtils import run_cmd
 from common.Timer import Timer
 from common.TimeUtils import validate_dates
 import traceback
@@ -39,6 +40,12 @@ def split_files(original_repo_path="", target_paths: list = [],
     :param end_date: 结束日期, 格式为 'YYYY-MM-DD'
     """
     with LoggerFactory.create_logger(f"{TAG}#split_files") as logger:
+        def stdout_handler(line):
+            logger.info_print(line.strip())
+
+        def stderr_handler(line):
+            logger.error_print(line.strip())
+
         timer = Timer(logger=logger)
 
         timer.lap()
@@ -122,19 +129,32 @@ def split_files(original_repo_path="", target_paths: list = [],
         # 实现上使用自定义回调函数
         # 参阅https://htmlpreview.github.io/?https://github.com/newren/git-filter-repo/blob/docs/html/git-filter-repo.html#CALLBACKS
         # 在 git-filter-repo 中使用 --commit-callback 参数，传入一个自定义的回调函数（字符串形式的python代码）
+        # 提供了start_date或者end_date
+        should_skip_condition = ""
         if start_date:
-            s_date_str = f'b"{start_date}T00:00:00"'
-            start_callback = f'if commit.committer_date < {s_date_str} or author_date < {s_date_str}: \n\tcommit.skip()\n'
-        else:
-            start_callback = ''
+            should_skip_condition += f' commit_date < "{start_date}T00:00:00" or'
         if end_date:
-            e_date_str = f'b"{end_date}T23:59:59"'
-            end_callback = f'if commit.committer_date > {e_date_str} or author_date > {e_date_str}: \n\tcommit.skip()\n'
-        else:
-            end_callback = ''
-        commit_callback = f'{start_callback}{end_callback}'
-        if commit_callback:
-            commit_callback = f"'\n{commit_callback}'"
+            should_skip_condition += f' commit_date > "{end_date}T00:00:00" or'
+        if should_skip_condition:
+            # 去掉前置空格
+            should_skip_condition = should_skip_condition[1:]
+            # 去掉最后一个 or
+            should_skip_condition = should_skip_condition[:-2]
+            commit_callback = f"""'
+    import datetime
+    # 将 UNIX 时间戳转为 datetime 对象
+    timestamp = int(commit.committer_date.split()[0])
+    commit_date = datetime.datetime.utcfromtimestamp(timestamp).strftime("%Y-%m-%dT%H:%M:%S")
+    # 打印调试信息
+    # print(f"1: {{commit.committer_date}}")
+    # print(f"2: {{commit_date}}")
+    # 日期范围比较
+    if {should_skip_condition}:
+        # print("skip")
+        commit.skip()
+    # else:
+        # print("keep")
+'"""
             logger.info_print(f"commit_callback: \n{commit_callback}")
             split_cmd.extend(['--commit-callback', commit_callback])
         # 保留原始提交哈希，而不是生成新的提交哈希
@@ -143,7 +163,10 @@ def split_files(original_repo_path="", target_paths: list = [],
         split_cmd.extend(['--force'])
         logger.info_print(f"Target path and path-glob num: {target_num}")
         logger.info(f"Running command: {' '.join(split_cmd)}")
-        subprocess.run(split_cmd, check=True)
+        run_cmd(cmd=split_cmd,
+                stdout_handler=stdout_handler,
+                stderr_handler=stderr_handler,
+                check=True)
 
         timer.lap_and_show("Extract files and history")
 
@@ -154,10 +177,11 @@ def split_files(original_repo_path="", target_paths: list = [],
         remove_dir('.git/filter-repo')
         # 清理未使用的对象
         # git reflog expire --expire=now --all && git gc --prune=now --aggressive
-        subprocess.run(['git', 'reflog', 'expire',
-                        '--expire=now', '--all'], check=True)
-        subprocess.run(['git', 'gc', '--prune=now',
-                       '--aggressive'], check=True)
+        clean_cmd = ['git', 'reflog', 'expire', '--expire=now',
+                     '--all', '&&', 'git', 'gc', '--prune=now', '--aggressive']
+        run_cmd(cmd=clean_cmd,
+                stdout_handler=stdout_handler, stderr_handler=stderr_handler,
+                check=True)
         repo_size_after = get_repo_size_info()
         change_info = get_repo_size_change_info(
             repo_size_before, repo_size_after)
@@ -280,8 +304,10 @@ def split_cpp_modules(repo_path, include_dirs_relative_pahts, modules: list,
 
             timer.lap()
             logger.info(f"exist_headers: {len(headers)}, {headers}")
-            logger.info(f"unexist_headers: {len(unexist_headers)}, {unexist_headers}")
-            logger.info(f"target_cpp_files: {len(target_cpp_files)}, {target_cpp_files}")
+            logger.info(
+                f"unexist_headers: {len(unexist_headers)}, {unexist_headers}")
+            logger.info(
+                f"target_cpp_files: {len(target_cpp_files)}, {target_cpp_files}")
             timer.lap_and_show("Show headers and target files")
 
             split_files(original_repo_path=repo_path,
@@ -292,16 +318,12 @@ def split_cpp_modules(repo_path, include_dirs_relative_pahts, modules: list,
                         track_gitignore=track_gitignore,
                         regex_with_glob=regex_with_glob,
                         start_date=start_date, end_date=end_date)
+            # 统计新仓库信息
+            new_repo_path = f"{new_repo_location}/{new_repo_name}"
+            statistics_split_info(new_repo_path, target_cpp_files)
         except Exception as e:
             logger.error_print(f"Error: {e}")
             logger.error_print(traceback.format_exc())
         finally:
             timer.end()
             timer.show_time_cost()
-
-        try:
-            new_repo_path = f"{new_repo_location}/{new_repo_name}"
-            statistics_split_info(new_repo_path, target_cpp_files)
-        except Exception as e:
-            logger.error_print(f"Error: {e}")
-            logger.error_print(traceback.format_exc())
