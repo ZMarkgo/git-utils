@@ -1,15 +1,14 @@
 import subprocess
 
 
-def run_cmd(cmd, stdout_handler, stderr_handler, check=True, shell=False):
+def run_cmd(cmd, stdout_handler, stderr_handler, check=True):
     """
     运行命令并实时处理标准输出和标准错误。
 
-    :param cmd: 要运行的命令 (以列表形式传递)
+    :param cmd: 要运行的命令（以列表形式传递）
     :param stdout_handler: 处理标准输出的函数
     :param stderr_handler: 处理标准错误的函数
-    :param check: 是否检查命令的返回码并抛出异常 (默认为 True)
-    :param shell: 是否使用 shell 运行命令 (默认为 False)
+    :param check: 是否检查命令的返回码并抛出异常（默认为 True）
     """
     if stdout_handler is None:
         def stdout_handler(line): return None
@@ -19,8 +18,7 @@ def run_cmd(cmd, stdout_handler, stderr_handler, check=True, shell=False):
         cmd,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        text=True,
-        shell=shell
+        text=True
     ) as proc:
         # 实时处理标准输出
         for line in proc.stdout:

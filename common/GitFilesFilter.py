@@ -175,7 +175,7 @@ def split_files(original_repo_path="", target_paths: list = [],
                      '--all', '&&', 'git', 'gc', '--prune=now', '--aggressive']
         run_cmd(cmd=clean_cmd,
                 stdout_handler=subprocess_stdout_handler, stderr_handler=subprocess_stderr_handler,
-                check=True, shell=True)
+                check=True)
         repo_size_after = get_repo_size_info()
         change_info = get_repo_size_change_info(
             repo_size_before, repo_size_after)
