@@ -208,6 +208,8 @@ def split_files(original_repo_path="", target_paths: list = [],
 
         logger.info_print(get_sep("处理完成"))
 
+        timer.end_and_show()
+
 
 def statistics_split_info(repo_path, cpp_file_relative_paths):
     with LoggerFactory.create_logger(f"{TAG}#statistics_split_info") as logger:
@@ -313,6 +315,7 @@ def split_cpp_modules(repo_path, include_dirs_relative_pahts, modules: list,
                 f"target_cpp_files: {len(target_cpp_files)}, {target_cpp_files}")
             timer.lap_and_show("Show headers and target files")
 
+            timer.lap()
             split_files(original_repo_path=repo_path,
                         target_paths=target_paths,
                         new_repo_name=new_repo_name,
@@ -321,9 +324,13 @@ def split_cpp_modules(repo_path, include_dirs_relative_pahts, modules: list,
                         track_gitignore=track_gitignore,
                         regex_with_glob=regex_with_glob,
                         start_date=start_date, end_date=end_date)
+            timer.lap_and_show("Split files")
+
             # 统计新仓库信息
+            timer.lap()
             new_repo_path = f"{new_repo_location}/{new_repo_name}"
             statistics_split_info(new_repo_path, target_cpp_files)
+            timer.lap_and_show("Statistics split info")
         except Exception as e:
             logger.error_print(f"Error: {e}")
             logger.error_print(traceback.format_exc())
