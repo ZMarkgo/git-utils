@@ -213,7 +213,7 @@ class Logger:
         self.flush()
 
         # 打印异常的详细信息
-        if exc_type is not None and not self.error_print_and_ignore:
+        if exc_type is not None and self.error_print_and_ignore:
             self.error_print("Exception occurred:", flush=True)
             exception_info = traceback.format_exception(
                 exc_type, exc_value, exc_traceback)
