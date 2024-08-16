@@ -115,6 +115,15 @@ class Logger:
         with open(self.log_file_path, 'a') as f:
             f.write('')
 
+        self.info_print(
+            f"Logger created, log file path: {self.log_file_path}, \
+            time format: {self.time_format}, \
+            tag: {self.tag}, \
+            error_print_and_ignore: {self.error_print_and_ignore}, \
+            max_log_buffer_size: {max_log_buffer_size}, \
+            max_log_buffer_str_len: {max_log_buffer_str_len}, \
+            log_buffer: {type(self.log_buffer).__name__}")
+
     def format_info(self, info):
         current_time = datetime.now().strftime(self.time_format)
         return f"{current_time} [{self.tag}] INFO {info}"
