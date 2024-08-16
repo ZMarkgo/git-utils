@@ -10,37 +10,6 @@ DEFAULT_LOG_FILE_PATH = './logs/log.log'
 DEFAULT_TIME_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
 
 
-class ThreadSafeLogBuffer:
-    def __init__(self, max_log_buffer_size=100, max_log_buffer_str_len=1000):
-        self.log_buffer = []
-        self.log_buffer_str_len = 0
-        self.MAX_LOG_BUFFER_SIZE = max_log_buffer_size
-        self.MAX_LOG_BUFFER_STR_LEN = max_log_buffer_str_len
-        self.lock = threading.Lock()  # 创建一个锁
-
-    def append(self, msg):
-        with self.lock:  # 在修改共享资源前加锁
-            self.log_buffer.append(msg)
-            self.log_buffer_str_len += len(msg)
-
-    def is_full(self):
-        with self.lock:  # 访问共享资源时加锁
-            return len(self.log_buffer) >= self.MAX_LOG_BUFFER_SIZE or self.log_buffer_str_len >= self.MAX_LOG_BUFFER_STR_LEN
-
-    def clear(self):
-        with self.lock:  # 在修改共享资源前加锁
-            self.log_buffer.clear()
-            self.log_buffer_str_len = 0
-
-    def __len__(self):
-        with self.lock:  # 访问共享资源时加锁
-            return len(self.log_buffer)
-
-    def __iter__(self):
-        with self.lock:  # 迭代时加锁，确保一致性
-            return iter(self.log_buffer.copy())
-
-
 class LogBuffer:
     def __init__(self, max_log_buffer_size=100, max_log_buffer_str_len=1000):
         self.log_buffer = []
@@ -64,6 +33,32 @@ class LogBuffer:
 
     def __iter__(self):
         return iter(self.log_buffer)
+
+
+class ThreadSafeLogBuffer(LogBuffer):
+    def __init__(self, max_log_buffer_size=100, max_log_buffer_str_len=1000):
+        super().__init__(max_log_buffer_size, max_log_buffer_str_len)
+        self.lock = threading.Lock()  # 创建一个锁
+
+    def append(self, msg):
+        with self.lock:  # 在修改共享资源前加锁
+            super().append(msg)
+
+    def is_full(self):
+        with self.lock:  # 访问共享资源时加锁
+            return super().is_full()
+
+    def clear(self):
+        with self.lock:  # 在修改共享资源前加锁
+            super().clear()
+
+    def __len__(self):
+        with self.lock:  # 访问共享资源时加锁
+            return super().__len__()
+
+    def __iter__(self):
+        with self.lock:  # 迭代时加锁，确保一致性
+            return super().__iter__()
 
 
 class LogMetaInfo:
@@ -92,17 +87,28 @@ class LogMetaInfo:
 class Logger:
     def __init__(self, tag='', log_file_path=DEFAULT_LOG_FILE_PATH,
                  time_format=DEFAULT_TIME_FORMAT,
-                 log_buffer: ThreadSafeLogBuffer = None,
-                 max_log_buffer_size=100, max_log_buffer_str_len=1000):
+                 log_buffer: LogBuffer = None,
+                 error_print_and_ignore: bool = False,
+                 max_log_buffer_size: int = 100, max_log_buffer_str_len: int = 1000):
+        """
+        :param tag: 日志标签
+        :param log_file_path: 日志文件路径
+        :param time_format: 时间格式
+        :param log_buffer: 日志缓存, 为None则使用LogBuffer
+        :param error_print_and_ignore: 是否打印并忽略异常
+        :param max_log_buffer_size: 日志缓存最大长度
+        :param max_log_buffer_str_len: 日志缓存最大字符长度
+        """
         self.tag = tag
         self.log_file_path = log_file_path
         self.time_format = time_format
         if log_buffer is None:
-            self.log_buffer = ThreadSafeLogBuffer(
+            self.log_buffer = LogBuffer(
                 max_log_buffer_size, max_log_buffer_str_len)
         else:
             self.log_buffer = log_buffer
 
+        self.error_print_and_ignore = error_print_and_ignore
         if not os.path.exists(os.path.dirname(self.log_file_path)):
             os.makedirs(os.path.dirname(self.log_file_path))
 
@@ -207,11 +213,15 @@ class Logger:
         self.flush()
 
         # 打印异常的详细信息
-        if exc_type is not None:
-            print("Exception occurred:")
-            traceback.print_exception(exc_type, exc_value, exc_traceback)
+        if exc_type is not None and not self.error_print_and_ignore:
+            self.error_print("Exception occurred:", flush=True)
+            exception_info = traceback.format_exception(
+                exc_type, exc_value, exc_traceback)
+            for line in exception_info:
+                self.log_msg(msg=line, flush=True, stdout=True)
 
-        return True  # 如果要抑制异常，返回 True，否则返回 False
+        # 在__exit__中，如果要抑制异常，返回 True，否则返回 False
+        return self.error_print_and_ignore
 
 
 class LoggerFactory:
