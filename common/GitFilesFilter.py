@@ -325,6 +325,7 @@ def split_cpp_modules(repo_path, include_dirs_relative_pahts, modules: list,
                         regex_with_glob=regex_with_glob,
                         start_date=start_date, end_date=end_date)
             timer.lap_and_show("Split files")
+            timer.show_time_cost("仓库剥离总时间")
 
             # 统计新仓库信息
             timer.lap()

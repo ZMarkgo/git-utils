@@ -31,6 +31,9 @@ class Timer:
         self.show_time_cost()
 
     def show_time_cost(self, message="Time cost"):
+        """
+        展示自开始计时到当前时间的时间消耗
+        """
         time_cost_in_seconds = time.time() - self.time_start
         msg = f'{message}: {format_all_time(time_cost_in_seconds)}'
         if self.logger:
