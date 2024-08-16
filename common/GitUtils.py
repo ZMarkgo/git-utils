@@ -200,26 +200,31 @@ def count_file_commits(repo_path, file_relative_path):
     return len(get_file_commits(repo_path, file_relative_path))
 
 
-def get_files_commits(repo_path, file_relative_paths) -> list:
+def get_files_commits(repo_path, file_relative_paths):
     """
     获取多个文件的提交记录
+    :return: 提交记录列表, 不存在的文件列表
     """
     commits = set()
+    unexist_files = []
     with LoggerFactory.create_logger(tag=f"{TAG}#get_files_commits") as logger:
         for file_relative_path in file_relative_paths:
             try:
                 commits.update(get_file_commits(repo_path, file_relative_path))
             except Exception as e:
+                unexist_files.append(file_relative_path)
                 logger.error_print(f"Error: {e}")
                 logger.error_print(traceback.format_exc())
-    return list(commits)
+    return list(commits), unexist_files
 
 
 def count_files_commits(repo_path, file_relative_paths):
     """
     获取多个文件的提交记录
+    :return: 提交记录数量, 不存在的文件列表
     """
-    return len(get_files_commits(repo_path, file_relative_paths))
+    commits, unexist_files = get_files_commits(repo_path, file_relative_paths)
+    return len(commits), unexist_files
 
 
 def format_count_files_commits_msg(repo_path, file_relative_paths):
@@ -228,8 +233,14 @@ def format_count_files_commits_msg(repo_path, file_relative_paths):
     :param repo_path: 仓库路径
     :param file_relative_paths: 文件相对路径列表
     """
-    commits_count = count_files_commits(repo_path, file_relative_paths)
-    return f"Commits count of {file_relative_paths}: \n\t{commits_count}"
+    commits_count, unexist_files = count_files_commits(
+        repo_path, file_relative_paths)
+    if len(unexist_files) > 0:
+        exist_files = [
+            file for file in file_relative_paths if file not in unexist_files]
+        return f"Commits count of {exist_files}: \n\t{commits_count}\n\tAll paths: {file_relative_paths}\n\tUnexist paths: {unexist_files}"
+    else:
+        return f"Commits count of {file_relative_paths}: \n\t{commits_count}"
 
 
 def show_count_files_commits(repo_path, file_relative_paths):
