@@ -1,9 +1,8 @@
 import os
 import sys
-import subprocess
 from common.GitUtils import copy_dir, remove_dir, list_gitignore_files, get_repo_size_info, get_repo_size_change_info, remove_all_git_remotes, add_virtual_remote, create_branch, format_get_commit_count_msg, format_get_earliest_commit_date_msg
 from common.GitUtils import format_count_files_commits_msg
-from common.PrintUtils import get_sep, print_sep
+from common.PrintUtils import get_sep
 from common.FileUtils import remove_prefix_slash_and_dot, count_all_file_ext, format_file_ext_count_msg
 from common.CppHeaderUtils import get_relative_headers_of_files, get_relative_headers_of_files_all_commits, get_relative_headers_of_modules
 from common.Logger import LoggerFactory, LogMetaInfo
@@ -40,11 +39,15 @@ def split_files(original_repo_path="", target_paths: list = [],
     :param end_date: 结束日期, 格式为 'YYYY-MM-DD'
     """
     with LoggerFactory.create_logger(f"{TAG}#split_files") as logger:
-        def stdout_handler(line):
-            logger.info_print(line.strip())
+        def subprocess_stdout_handler(line):
+            if '\r' in line:
+                # 如果line中有\r，说明是进度信息，不换行
+                print(line, end='')
+            else:
+                print(line)
 
-        def stderr_handler(line):
-            logger.error_print(line.strip())
+        def subprocess_stderr_handler(line):
+            logger.log_msg(line.strip(), stdout=True)
 
         timer = Timer(logger=logger)
 
@@ -140,21 +143,12 @@ def split_files(original_repo_path="", target_paths: list = [],
             should_skip_condition = should_skip_condition[1:]
             # 去掉最后一个 or
             should_skip_condition = should_skip_condition[:-2]
-            commit_callback = f"""'
-    import datetime
-    # 将 UNIX 时间戳转为 datetime 对象
-    timestamp = int(commit.committer_date.split()[0])
-    commit_date = datetime.datetime.utcfromtimestamp(timestamp).strftime("%Y-%m-%dT%H:%M:%S")
-    # 打印调试信息
-    # print(f"1: {{commit.committer_date}}")
-    # print(f"2: {{commit_date}}")
-    # 日期范围比较
-    if {should_skip_condition}:
-        # print("skip")
-        commit.skip()
-    # else:
-        # print("keep")
-'"""
+            commit_callback = f"\
+            import datetime\n\
+            timestamp = int(commit.committer_date.split()[0])\n\
+            commit_date = datetime.datetime.utcfromtimestamp(timestamp).strftime(\"%Y-%m-%dT%H:%M:%S\")\n\
+            if {should_skip_condition}:\n\
+            \tcommit.skip()"
             logger.info_print(f"commit_callback: \n{commit_callback}")
             split_cmd.extend(['--commit-callback', commit_callback])
         # 保留原始提交哈希，而不是生成新的提交哈希
@@ -164,8 +158,8 @@ def split_files(original_repo_path="", target_paths: list = [],
         logger.info_print(f"Target path and path-glob num: {target_num}")
         logger.info(f"Running command: {' '.join(split_cmd)}")
         run_cmd(cmd=split_cmd,
-                stdout_handler=stdout_handler,
-                stderr_handler=stderr_handler,
+                stdout_handler=subprocess_stdout_handler,
+                stderr_handler=subprocess_stderr_handler,
                 check=True)
 
         timer.lap_and_show("Extract files and history")
@@ -180,7 +174,7 @@ def split_files(original_repo_path="", target_paths: list = [],
         clean_cmd = ['git', 'reflog', 'expire', '--expire=now',
                      '--all', '&&', 'git', 'gc', '--prune=now', '--aggressive']
         run_cmd(cmd=clean_cmd,
-                stdout_handler=stdout_handler, stderr_handler=stderr_handler,
+                stdout_handler=subprocess_stdout_handler, stderr_handler=subprocess_stderr_handler,
                 check=True)
         repo_size_after = get_repo_size_info()
         change_info = get_repo_size_change_info(
